@@ -1,0 +1,1956 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0d0f14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TechLaudo">
+<title>TechLaudo — Sistema de Laudos Técnicos</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ===== VARIABLES ===== */
+:root {
+  --bg: #0d0f14;
+  --surface: #141720;
+  --surface2: #1c2030;
+  --surface3: #232840;
+  --border: #2a3050;
+  --accent: #00e5ff;
+  --accent2: #7c4dff;
+  --accent3: #00ff9d;
+  --warn: #ff6b35;
+  --text: #e8eaf0;
+  --text2: #8892a4;
+  --text3: #4a5568;
+  --mono: 'Space Mono', monospace;
+  --sans: 'DM Sans', sans-serif;
+  --radius: 10px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  --sidebar-w: 240px;
+  --bottomnav-h: 64px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html { height:-webkit-fill-available; }
+body { background:var(--bg); color:var(--text); font-family:var(--sans); min-height:100vh; min-height:-webkit-fill-available; overflow-x:hidden; -webkit-font-smoothing:antialiased; }
+body::before { content:''; position:fixed; inset:0; z-index:0; background-image: linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px); background-size:40px 40px; pointer-events:none; }
+
+/* ===== LAYOUT ===== */
+#main { margin-left:var(--sidebar-w); min-height:100vh; position:relative; z-index:1; }
+.topbar { background:rgba(20,23,32,0.9); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border-bottom:1px solid var(--border); padding:14px 32px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:50; }
+.topbar-title { font-size:20px; font-weight:600; }
+.topbar-title span { color:var(--accent); }
+.topbar-actions { display:flex; gap:10px; align-items:center; }
+.topbar-menu-btn { display:none; background:none; border:none; color:var(--text2); cursor:pointer; padding:6px; border-radius:8px; transition:color .2s; -webkit-tap-highlight-color:transparent; }
+#sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:99; backdrop-filter:blur(2px); }
+#sidebar-overlay.open { display:block; }
+#bottom-nav { display:none; position:fixed; bottom:0; left:0; right:0; height:calc(var(--bottomnav-h) + var(--safe-bottom)); padding-bottom:var(--safe-bottom); background:var(--surface); border-top:1px solid var(--border); z-index:100; align-items:stretch; justify-content:space-around; }
+.bottom-nav-btn { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; background:none; border:none; color:var(--text3); font-family:var(--sans); font-size:10px; font-weight:500; cursor:pointer; transition:color .2s; padding:8px 4px; -webkit-tap-highlight-color:transparent; }
+.bottom-nav-btn.active { color:var(--accent); }
+
+/* ===== SIDEBAR ===== */
+#sidebar { position:fixed; left:0; top:0; bottom:0; width:var(--sidebar-w); background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; z-index:100; transition:transform .3s cubic-bezier(.4,0,.2,1); overflow-y:auto; -webkit-overflow-scrolling:touch; }
+.sidebar-logo { padding:28px 24px 20px; border-bottom:1px solid var(--border); flex-shrink:0; }
+.sidebar-logo h1 { font-family:var(--mono); font-size:18px; color:var(--accent); letter-spacing:2px; text-transform:uppercase; }
+.sidebar-logo span { font-size:11px; color:var(--text2); letter-spacing:1px; }
+.sidebar-nav { flex:1; padding:16px 12px; display:flex; flex-direction:column; gap:4px; }
+.nav-section-title { font-size:10px; letter-spacing:2px; color:var(--text3); text-transform:uppercase; padding:12px 12px 4px; font-family:var(--mono); }
+.nav-btn { display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:8px; border:none; background:transparent; color:var(--text2); font-family:var(--sans); font-size:14px; cursor:pointer; transition:all .2s; text-align:left; width:100%; min-height:44px; -webkit-tap-highlight-color:transparent; }
+.nav-btn svg { flex-shrink:0; opacity:.7; }
+.nav-btn:hover { background:var(--surface2); color:var(--text); }
+.nav-btn.active { background:rgba(0,229,255,0.1); color:var(--accent); font-weight:600; }
+.nav-btn.active svg { opacity:1; }
+.sidebar-footer { padding:16px 20px; border-top:1px solid var(--border); font-size:12px; color:var(--text3); flex-shrink:0; }
+
+/* ===== BUTTONS ===== */
+.btn { padding:10px 18px; border-radius:8px; border:none; cursor:pointer; font-family:var(--sans); font-size:14px; font-weight:600; transition:all .2s; display:inline-flex; align-items:center; justify-content:center; gap:7px; letter-spacing:.3px; min-height:44px; touch-action:manipulation; -webkit-tap-highlight-color:transparent; user-select:none; white-space:nowrap; }
+.btn-primary { background:var(--accent); color:#000; }
+.btn-primary:hover { background:#33ebff; transform:translateY(-1px); box-shadow:0 0 20px rgba(0,229,255,0.3); }
+.btn-primary:active { background:#00c0d4; transform:none; }
+.btn-secondary { background:var(--surface2); color:var(--text); border:1px solid var(--border); }
+.btn-secondary:hover { background:var(--surface3); border-color:var(--accent); }
+.btn-danger { background:rgba(255,107,53,0.1); color:var(--warn); border:1px solid rgba(255,107,53,0.3); }
+.btn-danger:hover { background:rgba(255,107,53,0.2); }
+.btn-ghost { background:transparent; color:var(--text2); border:1px solid var(--border); }
+.btn-ghost:hover { color:var(--text); border-color:var(--text2); }
+.btn-sm { padding:6px 12px; font-size:12px; min-height:36px; }
+.btn-purple { background:var(--accent2); color:#fff; }
+.btn-purple:hover { background:#9c6dff; transform:translateY(-1px); }
+.btn-green { background:var(--accent3); color:#000; }
+.btn-green:hover { background:#33ffb3; transform:translateY(-1px); }
+
+/* ===== CONTENT ===== */
+.content { padding:32px; max-width:1100px; }
+.page { display:none; }
+.page.active { display:block; animation:fadeIn .3s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+/* ===== CARDS ===== */
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:24px; margin-bottom:20px; }
+.card-title { font-size:13px; font-family:var(--mono); letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:20px; display:flex; align-items:center; gap:8px; }
+.card-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+/* ===== FORMS ===== */
+.form-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:16px; }
+.form-group { display:flex; flex-direction:column; gap:6px; }
+.form-group.full { grid-column:1 / -1; }
+label { font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--text2); font-weight:600; }
+input, select, textarea { background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:var(--sans); font-size:15px; padding:11px 14px; transition:border-color .2s, box-shadow .2s; outline:none; width:100%; -webkit-appearance:none; appearance:none; }
+@supports (-webkit-touch-callout: none) { input, select, textarea { font-size:16px; } }
+input:focus, select:focus, textarea:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(0,229,255,0.1); }
+textarea { resize:vertical; min-height:80px; }
+select option { background:var(--surface2); }
+input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+input[type=number] { -moz-appearance:textfield; }
+input[type=date]::-webkit-calendar-picker-indicator { filter:invert(0.6); cursor:pointer; }
+
+/* ===== TABS ===== */
+.tabs { display:flex; gap:0; border-bottom:1px solid var(--border); margin-bottom:24px; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+.tabs::-webkit-scrollbar { display:none; }
+.tab-btn { padding:10px 16px; background:none; border:none; border-bottom:2px solid transparent; color:var(--text2); cursor:pointer; font-family:var(--sans); font-size:13px; font-weight:500; margin-bottom:-1px; transition:all .2s; white-space:nowrap; min-height:44px; }
+.tab-btn.active { color:var(--accent); border-bottom-color:var(--accent); }
+.tab-content { display:none; }
+.tab-content.active { display:block; animation:fadeIn .2s ease; }
+.divider { height:1px; background:var(--border); margin:20px 0; }
+
+/* ===== BADGES ===== */
+.badge { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; font-family:var(--mono); white-space:nowrap; }
+.badge-green { background:rgba(0,255,157,0.1); color:var(--accent3); border:1px solid rgba(0,255,157,0.2); }
+.badge-yellow { background:rgba(255,214,0,0.1); color:#ffd600; border:1px solid rgba(255,214,0,0.2); }
+.badge-red { background:rgba(255,107,53,0.1); color:var(--warn); border:1px solid rgba(255,107,53,0.2); }
+.badge-blue { background:rgba(0,229,255,0.1); color:var(--accent); border:1px solid rgba(0,229,255,0.2); }
+.badge-purple { background:rgba(124,77,255,0.1); color:var(--accent2); border:1px solid rgba(124,77,255,0.2); }
+
+/* ===== TABLE ===== */
+.table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+table { width:100%; border-collapse:collapse; font-size:13px; }
+th { padding:10px 14px; text-align:left; font-family:var(--mono); font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--text3); border-bottom:1px solid var(--border); white-space:nowrap; }
+td { padding:12px 14px; border-bottom:1px solid rgba(42,48,80,0.5); color:var(--text2); vertical-align:middle; }
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:rgba(255,255,255,0.02); }
+td.highlight { color:var(--text); font-weight:500; }
+
+/* ===== STATS ===== */
+.stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+.stat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; position:relative; overflow:hidden; }
+.stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
+.stat-card.c1::before { background:var(--accent); }
+.stat-card.c2::before { background:var(--accent2); }
+.stat-card.c3::before { background:var(--accent3); }
+.stat-card.c4::before { background:var(--warn); }
+.stat-label { font-size:11px; color:var(--text3); text-transform:uppercase; letter-spacing:1.5px; font-family:var(--mono); margin-bottom:10px; }
+.stat-value { font-size:30px; font-weight:700; font-family:var(--mono); }
+.stat-card.c1 .stat-value { color:var(--accent); }
+.stat-card.c2 .stat-value { color:var(--accent2); }
+.stat-card.c3 .stat-value { color:var(--accent3); }
+.stat-card.c4 .stat-value { color:var(--warn); }
+.stat-sub { font-size:12px; color:var(--text3); margin-top:6px; }
+
+/* ===== ORCAMENTO ITEMS ===== */
+.orcamento-items { display:flex; flex-direction:column; gap:10px; }
+.item-row { display:flex; flex-direction:column; gap:8px; background:var(--surface2); padding:14px; border-radius:8px; border:1px solid var(--border); transition:border-color .2s; }
+.item-row:hover { border-color:var(--accent); }
+.item-row input { background:var(--surface3); border-color:transparent; }
+.item-row input:focus { border-color:var(--accent); }
+.item-row-sub { display:flex; gap:8px; align-items:center; width:100%; }
+.item-total { font-family:var(--mono); color:var(--accent3); font-size:13px; font-weight:700; text-align:right; }
+.remove-btn { background:none; border:none; color:var(--text3); cursor:pointer; padding:8px; border-radius:6px; transition:color .2s; display:flex; align-items:center; justify-content:center; min-height:44px; min-width:44px; -webkit-tap-highlight-color:transparent; flex-shrink:0; }
+.remove-btn:hover, .remove-btn:active { color:var(--warn); }
+.total-bar { display:flex; justify-content:flex-end; gap:20px; align-items:center; flex-wrap:wrap; padding:16px 20px; background:var(--surface2); border-radius:8px; border:1px solid var(--border); margin-top:12px; }
+.total-item { text-align:right; }
+.total-item label { font-size:11px; color:var(--text3); letter-spacing:1px; display:block; }
+.total-item span { font-family:var(--mono); font-size:16px; font-weight:700; color:var(--text); }
+.total-item.grand span { font-size:22px; color:var(--accent3); }
+
+/* ===== CHECKLIST ===== */
+.checklist { display:flex; flex-direction:column; gap:8px; }
+.check-item { display:flex; align-items:center; gap:12px; padding:12px 16px; background:var(--surface2); border-radius:8px; border:1px solid var(--border); cursor:pointer; transition:border-color .2s; min-height:48px; -webkit-tap-highlight-color:transparent; }
+.check-item:hover { border-color:var(--accent); }
+.check-item input[type=checkbox] { width:20px; height:20px; cursor:pointer; accent-color:var(--accent); flex-shrink:0; }
+.check-item span { font-size:13px; color:var(--text2); flex:1; }
+.check-item.checked span { color:var(--text3); text-decoration:line-through; }
+.check-item select { width:auto; padding:6px 8px; font-size:13px; background:var(--surface3); }
+.check-status-btn { padding:4px 10px; border-radius:6px; border:1px solid var(--border); background:var(--surface3); color:var(--text2); font-size:11px; cursor:pointer; font-family:var(--mono); transition:all .2s; white-space:nowrap; }
+.check-status-btn.ok { background:rgba(0,255,157,0.1); color:var(--accent3); border-color:rgba(0,255,157,0.3); }
+.check-status-btn.defeito { background:rgba(255,107,53,0.1); color:var(--warn); border-color:rgba(255,107,53,0.3); }
+
+/* ===== MODAL ===== */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:200; align-items:flex-end; justify-content:center; padding:0; }
+.modal-overlay.open { display:flex; animation:fadeIn .2s ease; }
+.modal { background:var(--surface); border:1px solid var(--border); border-radius:16px 16px 0 0; padding:24px 20px; padding-bottom:calc(24px + var(--safe-bottom)); width:100%; max-height:92vh; overflow-y:auto; -webkit-overflow-scrolling:touch; animation:slideUp .25s cubic-bezier(.4,0,.2,1); }
+@keyframes slideUp { from { transform:translateY(60px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+.modal::before { content:''; display:block; width:40px; height:4px; background:var(--border); border-radius:2px; margin:0 auto 20px; }
+.modal h2 { font-size:17px; margin-bottom:20px; color:var(--accent); font-family:var(--mono); }
+.modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:20px; flex-wrap:wrap; }
+
+/* ===== TOAST ===== */
+#toast-container { position:fixed; bottom:calc(var(--bottomnav-h) + var(--safe-bottom) + 12px); right:16px; display:flex; flex-direction:column; gap:10px; z-index:9999; pointer-events:none; }
+.toast { background:var(--surface2); border:1px solid var(--border); border-left:3px solid var(--accent3); border-radius:8px; padding:12px 18px; font-size:13px; min-width:240px; max-width:calc(100vw - 32px); animation:slideIn .3s ease; display:flex; align-items:center; gap:10px; box-shadow:var(--shadow); pointer-events:auto; }
+.toast.error { border-left-color:var(--warn); }
+@keyframes slideIn { from { transform:translateX(110%); opacity:0; } to { transform:translateX(0); opacity:1; } }
+
+/* ===== PGTO BUTTONS ===== */
+.pgto-btn { display:inline-flex; align-items:center; justify-content:center; padding:10px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; cursor:pointer; font-size:13px; color:var(--text2); transition:all .2s; user-select:none; min-height:44px; -webkit-tap-highlight-color:transparent; }
+.pgto-btn:hover { border-color:var(--accent); color:var(--text); }
+.pgto-btn.selected { background:rgba(0,229,255,0.12); border-color:var(--accent); color:var(--accent); font-weight:600; }
+
+/* ===== TAB NAV BAR ===== */
+.tab-nav-bar { display:flex; justify-content:space-between; align-items:center; margin-top:24px; padding-top:20px; border-top:1px solid var(--border); gap:12px; }
+.tab-progress { display:flex; gap:6px; align-items:center; }
+.tab-dot { width:8px; height:8px; border-radius:50%; background:var(--border); transition:all .2s; }
+.tab-dot.active { background:var(--accent); width:20px; border-radius:4px; }
+.tab-dot.done { background:var(--accent3); }
+
+/* ===== AUTOCOMPLETE ===== */
+.autocomplete-wrap { position:relative; }
+.autocomplete-list { display:none; position:absolute; top:calc(100% + 4px); left:0; right:0; background:var(--surface); border:1px solid var(--border); border-radius:8px; z-index:300; max-height:220px; overflow-y:auto; box-shadow:var(--shadow); }
+.autocomplete-list.open { display:block; animation:fadeIn .15s ease; }
+.autocomplete-item { padding:12px 14px; cursor:pointer; border-bottom:1px solid rgba(42,48,80,0.4); transition:background .15s; min-height:48px; display:flex; flex-direction:column; justify-content:center; }
+.autocomplete-item:last-child { border-bottom:none; }
+.autocomplete-item:hover, .autocomplete-item:active { background:var(--surface2); }
+.autocomplete-item-name { font-size:13px; color:var(--text); font-weight:500; }
+.autocomplete-item-detail { font-size:11px; color:var(--text3); margin-top:2px; }
+
+/* ===== CATÁLOGO ===== */
+.catalogo-dropdown { position:relative; display:inline-block; }
+.catalogo-panel { display:none; position:absolute; top:calc(100% + 6px); left:0; z-index:200; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:10px; min-width:320px; box-shadow:var(--shadow); }
+.catalogo-panel.open { display:block; animation:fadeIn .15s ease; }
+.catalogo-search { margin-bottom:8px; position:relative; }
+.catalogo-search input { padding:8px 12px 8px 34px; font-size:14px; background:var(--surface2); }
+.catalogo-search svg { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--text3); pointer-events:none; }
+.catalogo-category { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--text3); font-family:var(--mono); padding:8px 6px 4px; }
+.catalogo-item { display:flex; align-items:center; justify-content:space-between; padding:10px; border-radius:6px; transition:background .15s; min-height:48px; -webkit-tap-highlight-color:transparent; }
+.catalogo-item:hover, .catalogo-item:active { background:var(--surface2); }
+.catalogo-item-info { flex:1; }
+.catalogo-item-name { font-size:13px; color:var(--text); }
+.catalogo-item-price { font-size:11px; color:var(--text3); margin-top:2px; }
+.catalogo-item-add { background:rgba(0,229,255,0.1); border:1px solid rgba(0,229,255,0.2); color:var(--accent); border-radius:5px; padding:5px 10px; font-size:11px; font-weight:700; cursor:pointer; font-family:var(--mono); transition:background .15s; min-height:36px; }
+.catalogo-item-add:hover { background:rgba(0,229,255,0.2); }
+.catalogo-list { max-height:260px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+.catalogo-list::-webkit-scrollbar { width:4px; }
+.catalogo-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+
+/* ===== HISTORY ITEMS ===== */
+.history-item { display:flex; align-items:center; gap:14px; padding:14px 16px; background:var(--surface2); border-radius:8px; border:1px solid var(--border); margin-bottom:8px; cursor:pointer; transition:border-color .2s; min-height:64px; -webkit-tap-highlight-color:transparent; }
+.history-item:hover { border-color:var(--accent); }
+.history-item-icon { width:40px; height:40px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:18px; }
+.history-item-info { flex:1; min-width:0; }
+.history-item-info h4 { font-size:14px; font-weight:600; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.history-item-info p { font-size:12px; color:var(--text3); }
+.history-item-value { font-family:var(--mono); font-size:14px; color:var(--accent3); font-weight:700; flex-shrink:0; }
+
+/* ===== EQUIP SUGESTOES ===== */
+.eq-sugestao-item { display:flex; align-items:center; gap:12px; padding:12px 14px; cursor:pointer; border-bottom:1px solid var(--border); transition:background .15s; min-height:56px; }
+.eq-sugestao-item:last-child { border-bottom:none; }
+.eq-sugestao-item:hover, .eq-sugestao-item:active { background:var(--surface2); }
+.eq-sugestao-icon { width:36px; height:36px; border-radius:8px; background:var(--surface3); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+.eq-sugestao-info { flex:1; min-width:0; }
+.eq-sugestao-nome { font-size:13px; color:var(--text); font-weight:600; }
+.eq-sugestao-specs { font-size:11px; color:var(--text3); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.eq-sugestao-badge { font-size:10px; font-family:var(--mono); color:var(--accent); background:rgba(0,229,255,0.1); border-radius:4px; padding:2px 6px; flex-shrink:0; }
+
+/* ===== EMPTY STATE ===== */
+.empty-state { text-align:center; padding:60px 20px; color:var(--text3); }
+.empty-state svg { margin-bottom:12px; opacity:.4; }
+.empty-state p { font-size:14px; line-height:1.6; }
+
+/* ===== SEARCH BAR ===== */
+.search-bar { display:flex; align-items:center; gap:10px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:8px 14px; width:260px; min-height:44px; }
+.search-bar input { background:none; border:none; padding:0; font-size:14px; box-shadow:none; flex:1; }
+.search-bar input:focus { box-shadow:none; border:none; }
+
+/* ===== PRINT ===== */
+#print-area { display:none; }
+@media print {
+  body * { visibility:hidden; background:white !important; color:black !important; }
+  #print-area, #print-area * { visibility:visible; }
+  #print-area { display:block !important; position:fixed; inset:0; padding:30px 40px; font-family:Arial, sans-serif; background:white; color:black; }
+  .print-header { display:flex; justify-content:space-between; border-bottom:2px solid #333; padding-bottom:20px; margin-bottom:24px; }
+  .print-logo { font-size:22px; font-weight:700; }
+  .print-meta { text-align:right; font-size:12px; line-height:1.6; }
+  .print-section { margin-bottom:20px; }
+  .print-section h3 { font-size:13px; text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid #ccc; padding-bottom:6px; margin-bottom:10px; }
+  .print-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; font-size:12px; }
+  .print-grid div { padding:4px 0; }
+  .print-grid span { font-weight:700; }
+  .print-table { width:100%; border-collapse:collapse; font-size:12px; margin-top:8px; }
+  .print-table th { background:#f0f0f0; padding:6px 10px; text-align:left; border:1px solid #ddd; }
+  .print-table td { padding:6px 10px; border:1px solid #ddd; }
+  .print-total { text-align:right; margin-top:12px; font-size:14px; font-weight:700; }
+  .print-sign { display:flex; justify-content:space-between; margin-top:60px; }
+  .print-sign div { text-align:center; border-top:1px solid #333; padding-top:8px; font-size:12px; min-width:200px; }
+  .print-checklist { display:grid; grid-template-columns:repeat(2,1fr); gap:4px; font-size:11px; }
+  .print-checklist-item { display:flex; gap:6px; align-items:center; }
+}
+
+/* ===== CONFIG ===== */
+.config-section { margin-bottom:28px; }
+.config-row { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--surface2); border-radius:8px; border:1px solid var(--border); margin-bottom:8px; min-height:56px; }
+.config-row label { font-size:13px; color:var(--text); font-weight:500; }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 900px) {
+  #sidebar { transform:translateX(-100%); z-index:100; }
+  #sidebar.open { transform:translateX(0); box-shadow:4px 0 32px rgba(0,0,0,0.6); }
+  #main { margin-left:0; padding-bottom:calc(var(--bottomnav-h) + var(--safe-bottom)); }
+  .topbar { padding:12px 16px; }
+  .topbar-menu-btn { display:flex; }
+  #bottom-nav { display:flex; }
+  .topbar-actions .btn { display:none; }
+  .stats-grid { grid-template-columns:repeat(2,1fr); gap:12px; }
+  .content { padding:16px; }
+  .card { padding:16px; }
+  .search-bar { width:100%; flex:1; }
+}
+@media (max-width: 600px) {
+  .topbar-title { font-size:16px; }
+  .content { padding:12px; }
+  .form-grid { grid-template-columns:1fr; gap:12px; }
+  input, select, textarea { font-size:16px; padding:12px 14px; }
+  .total-bar { flex-direction:column; align-items:stretch; gap:12px; padding:14px; }
+  .total-item { display:flex; justify-content:space-between; align-items:center; text-align:left; }
+  .total-item label { display:inline; margin-right:8px; }
+  .catalogo-panel { position:fixed; left:12px; right:12px; bottom:calc(var(--bottomnav-h) + var(--safe-bottom) + 12px); top:auto; min-width:unset; max-height:60vh; overflow-y:auto; border-radius:12px; z-index:500; }
+  #hist-filtros-laudos, #hist-filtros-orcamentos { flex-direction:column; align-items:stretch !important; }
+  #hist-filtro-status { width:100% !important; }
+}
+@media (max-width: 400px) {
+  .stats-grid { grid-template-columns:repeat(2,1fr); gap:8px; }
+  .stat-value { font-size:22px; }
+  .stat-card { padding:14px; }
+}
+@media (min-width: 700px) {
+  .modal-overlay { align-items:center; padding:20px; }
+  .modal { border-radius:14px; max-width:600px; padding:32px; animation:fadeIn .2s ease; }
+  .modal::before { display:none; }
+}
+@media (min-width: 900px) {
+  .modal { max-width:680px; }
+  #toast-container { bottom:24px; right:24px; }
+}
+</style>
+</head>
+<body>
+
+<div id="print-area"></div>
+<div id="toast-container"></div>
+<div id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- SIDEBAR -->
+<aside id="sidebar">
+  <div class="sidebar-logo">
+    <h1>TechLaudo</h1>
+    <span>Sistema Técnico v4.0</span>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-title">Menu</div>
+    <button class="nav-btn active" onclick="navigate('dashboard')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </button>
+    <button class="nav-btn" onclick="navigate('novo-laudo')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+      Novo Laudo
+    </button>
+    <button class="nav-btn" onclick="navigate('orcamento')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Orçamento
+    </button>
+    <button class="nav-btn" onclick="navigate('historico')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      Histórico
+    </button>
+    <div class="nav-section-title">Sistema</div>
+    <button class="nav-btn" onclick="navigate('configuracoes')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Configurações
+    </button>
+  </nav>
+  <div class="sidebar-footer">&copy; 2025 TechLaudo<br>Todos os direitos reservados</div>
+</aside>
+
+<!-- MAIN -->
+<main id="main">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="topbar-menu-btn" onclick="toggleSidebar()" aria-label="Menu">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="topbar-title" id="page-title">Dashboard</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-primary btn-sm" onclick="navigate('novo-laudo')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Novo Laudo
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+
+  <!-- DASHBOARD -->
+  <div id="page-dashboard" class="page active">
+    <div class="stats-grid">
+      <div class="stat-card c1"><div class="stat-label">Total Laudos</div><div class="stat-value" id="stat-total">0</div><div class="stat-sub">Todos os registros</div></div>
+      <div class="stat-card c2"><div class="stat-label">Em Andamento</div><div class="stat-value" id="stat-andamento">0</div><div class="stat-sub">Aguardando aprovação</div></div>
+      <div class="stat-card c3"><div class="stat-label">Concluídos</div><div class="stat-value" id="stat-concluido">0</div><div class="stat-sub">Serviços finalizados</div></div>
+      <div class="stat-card c4"><div class="stat-label">Faturamento</div><div class="stat-value" id="stat-faturamento">R$0</div><div class="stat-sub">Total orçamentos</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>Laudos Recentes</div>
+      <div id="dashboard-list"><div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>Nenhum laudo cadastrado.<br>Clique em <strong>Novo Laudo</strong> para começar.</p></div></div>
+    </div>
+  </div>
+
+  <!-- NOVO LAUDO -->
+  <div id="page-novo-laudo" class="page">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="navegarTab(0)">👤 Cliente</button>
+      <button class="tab-btn" onclick="navegarTab(1)">💻 Equipamento</button>
+      <button class="tab-btn" onclick="navegarTab(2)">🔍 Diagnóstico</button>
+      <button class="tab-btn" onclick="navegarTab(3)">✅ Checklist</button>
+    </div>
+
+    <!-- TAB CLIENTE -->
+    <div id="tab-cliente" class="tab-content active">
+      <div class="card">
+        <div class="card-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Dados do Cliente</div>
+        <div class="form-grid">
+          <div class="form-group"><label>Nome Completo *</label><input type="text" id="cli-nome" placeholder="João da Silva"></div>
+          <div class="form-group"><label>CPF / CNPJ</label><input type="text" id="cli-doc" placeholder="000.000.000-00" inputmode="numeric"></div>
+          <div class="form-group"><label>Telefone *</label><input type="text" id="cli-tel" placeholder="(85) 99999-9999" inputmode="tel"></div>
+          <div class="form-group"><label>E-mail</label><input type="email" id="cli-email" placeholder="email@exemplo.com"></div>
+          <div class="form-group full"><label>Endereço</label><input type="text" id="cli-end" placeholder="Rua, número, bairro, cidade"></div>
+          <div class="form-group"><label>Nº do Laudo</label><input type="text" id="laudo-num" placeholder="Auto"></div>
+          <div class="form-group"><label>Data de Entrada</label><input type="date" id="laudo-data"></div>
+          <div class="form-group"><label>Previsão de Entrega</label><input type="date" id="laudo-entrega"></div>
+          <div class="form-group"><label>Status</label>
+            <select id="laudo-status">
+              <option value="entrada">Entrada</option><option value="diagnostico">Em Diagnóstico</option>
+              <option value="aguardando">Aguardando Aprovação</option><option value="em_reparo">Em Reparo</option>
+              <option value="concluido">Concluído</option><option value="entregue">Entregue</option><option value="cancelado">Cancelado</option>
+            </select>
+          </div>
+        </div>
+        <div class="tab-nav-bar">
+          <div></div>
+          <div class="tab-progress"><div class="tab-dot active"></div><div class="tab-dot"></div><div class="tab-dot"></div><div class="tab-dot"></div></div>
+          <button class="btn btn-primary" onclick="navegarTab(1)">Próximo <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB EQUIPAMENTO -->
+    <div id="tab-equipamento" class="tab-content">
+      <div class="card">
+        <div class="card-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Identificação do Equipamento</div>
+        <div style="background:rgba(0,229,255,0.05);border:1px solid rgba(0,229,255,0.2);border-radius:10px;padding:16px;margin-bottom:20px">
+          <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);font-family:var(--mono);margin-bottom:12px">🔍 Busca Rápida — preenche specs automaticamente</div>
+          <div style="position:relative">
+            <input type="text" id="eq-busca-modelo" placeholder="Digite marca ou modelo... ex: Dell Inspiron, ThinkPad, MacBook Pro..." oninput="buscarModelo(this.value)" autocomplete="off" style="padding-left:38px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </div>
+          <div id="eq-sugestoes" style="display:none;margin-top:6px;background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;max-height:260px;overflow-y:auto;box-shadow:var(--shadow)"></div>
+          <div id="eq-modelo-selecionado" style="display:none;margin-top:10px;background:rgba(0,255,157,0.05);border:1px solid rgba(0,255,157,0.2);border-radius:8px;padding:12px 14px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div><span style="font-size:12px;color:var(--accent3);font-weight:600;font-family:var(--mono)" id="eq-modelo-nome-sel">—</span><span style="font-size:11px;color:var(--text3);margin-left:8px">Specs carregadas ✓</span></div>
+              <button class="btn btn-ghost btn-sm" onclick="limparModeloSelecionado()" style="padding:4px 10px;font-size:11px">✕ Limpar</button>
+            </div>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group"><label>Tipo *</label><select id="eq-tipo"><option>Notebook</option><option>Desktop / PC</option><option>All-in-One</option><option>Servidor</option><option>Tablet</option><option>Impressora</option><option>Outro</option></select></div>
+          <div class="form-group"><label>Marca *</label><input type="text" id="eq-marca" placeholder="Dell, HP, Lenovo..."></div>
+          <div class="form-group"><label>Modelo</label><input type="text" id="eq-modelo" placeholder="Inspiron 15 3000"></div>
+          <div class="form-group"><label>Número de Série</label><input type="text" id="eq-serie" placeholder="SN123456789"></div>
+          <div class="form-group"><label>Patrimônio</label><input type="text" id="eq-pat" placeholder="PAT-001"></div>
+          <div class="form-group"><label>Sistema Operacional</label><select id="eq-so"><option>Windows 11</option><option>Windows 10</option><option>Windows 7</option><option>Ubuntu / Linux</option><option>macOS</option><option>Sem SO</option><option>Outro</option></select></div>
+        </div>
+        <div class="divider"></div>
+        <div class="card-title">⚙️ Hardware</div>
+        <div class="form-grid">
+          <div class="form-group"><label>Processador</label><input type="text" id="hw-cpu" placeholder="Intel Core i5-10400"></div>
+          <div class="form-group"><label>Memória RAM</label><input type="text" id="hw-ram" placeholder="8GB DDR4"></div>
+          <div class="form-group"><label>Armazenamento</label><input type="text" id="hw-hd" placeholder="SSD 256GB + HDD 1TB"></div>
+          <div class="form-group"><label>Placa de Vídeo</label><input type="text" id="hw-gpu" placeholder="GTX 1650 / Integrada"></div>
+          <div class="form-group"><label>Fonte</label><input type="text" id="hw-fonte" placeholder="450W 80Plus"></div>
+          <div class="form-group"><label>Placa-Mãe</label><input type="text" id="hw-mb" placeholder="ASUS ROG B450"></div>
+        </div>
+        <div class="divider"></div>
+        <div class="card-title">📦 Acessórios</div>
+        <div class="form-grid">
+          <div class="form-group full"><label>Acessórios Recebidos</label><input type="text" id="eq-acess" placeholder="Carregador, mouse, teclado, mochila..."></div>
+          <div class="form-group full"><label>Condição Visual</label><textarea id="eq-cond" placeholder="Descreva amassados, arranhões, quebras..."></textarea></div>
+        </div>
+        <div class="tab-nav-bar">
+          <button class="btn btn-secondary" onclick="navegarTab(0)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>Voltar</button>
+          <div class="tab-progress"><div class="tab-dot done"></div><div class="tab-dot active"></div><div class="tab-dot"></div><div class="tab-dot"></div></div>
+          <button class="btn btn-primary" onclick="navegarTab(2)">Próximo <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB DIAGNÓSTICO -->
+    <div id="tab-diagnostico" class="tab-content">
+      <div class="card">
+        <div class="card-title">💬 Reclamação do Cliente</div>
+        <div class="form-group"><label>Defeito Relatado pelo Cliente *</label><textarea id="diag-recl" placeholder="Descreva exatamente o que o cliente disse..." style="min-height:90px"></textarea></div>
+      </div>
+      <div class="card">
+        <div class="card-title">🔬 Diagnóstico Técnico</div>
+        <div class="form-grid">
+          <div class="form-group full"><label>Análise / Problema Identificado *</label><textarea id="diag-analise" placeholder="Descreva o defeito encontrado pelo técnico..." style="min-height:100px"></textarea></div>
+          <div class="form-group full"><label>Serviços a Realizar</label><textarea id="diag-servicos" placeholder="Liste os serviços que serão executados..." style="min-height:80px"></textarea></div>
+          <div class="form-group"><label>Causa do Problema</label>
+            <select id="diag-causa"><option value="">-- Selecione --</option><option>Mau uso</option><option>Desgaste natural</option><option>Superaquecimento</option><option>Queda / Impacto</option><option>Contato com líquido</option><option>Vírus / Malware</option><option>Falha de software</option><option>Curto-circuito</option><option>Defeito de fábrica</option><option>Outro</option></select>
+          </div>
+          <div class="form-group"><label>Grau de Urgência</label>
+            <select id="diag-urgencia"><option value="normal">Normal</option><option value="urgente">Urgente</option><option value="critico">Crítico</option></select>
+          </div>
+          <div class="form-group full"><label>Observações Adicionais</label><textarea id="diag-obs" placeholder="Informações extras, avisos ao cliente, garantias..."></textarea></div>
+          <div class="form-group"><label>Técnico Responsável</label><input type="text" id="diag-tecnico" placeholder="Nome do técnico"></div>
+        </div>
+        <div class="tab-nav-bar">
+          <button class="btn btn-secondary" onclick="navegarTab(1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>Voltar</button>
+          <div class="tab-progress"><div class="tab-dot done"></div><div class="tab-dot done"></div><div class="tab-dot active"></div><div class="tab-dot"></div></div>
+          <button class="btn btn-primary" onclick="navegarTab(3)">Próximo <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB CHECKLIST -->
+    <div id="tab-checklist" class="tab-content">
+      <div class="card">
+        <div class="card-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Checklist de Vistoria</div>
+        <div class="checklist" id="checklist-items"></div>
+        <div class="tab-nav-bar" style="margin-top:16px">
+          <button class="btn btn-secondary" onclick="navegarTab(2)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>Voltar</button>
+          <div class="tab-progress"><div class="tab-dot done"></div><div class="tab-dot done"></div><div class="tab-dot done"></div><div class="tab-dot active"></div></div>
+          <div></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px">
+        <button class="btn btn-primary" onclick="salvarLaudo()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Salvar Laudo</button>
+        <button class="btn btn-purple" onclick="gerarOrcamentoDoLaudo()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Gerar Orçamento</button>
+        <button class="btn btn-secondary" onclick="limparFormulario()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.02"/></svg>Limpar</button>
+      </div>
+    </div>
+  </div><!-- /page-novo-laudo -->
+
+  <!-- ORÇAMENTO -->
+  <div id="page-orcamento" class="page">
+    <div class="card">
+      <div class="card-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Orçamento de Serviços e Peças</div>
+      <div class="form-grid" style="margin-bottom:20px">
+        <div class="form-group">
+          <label>Cliente</label>
+          <div class="autocomplete-wrap">
+            <input type="text" id="orc-cliente" placeholder="Nome do cliente" autocomplete="off" oninput="autocompleteCliente(this.value)" onfocus="autocompleteCliente(this.value)">
+            <div class="autocomplete-list" id="orc-cliente-list"></div>
+          </div>
+        </div>
+        <div class="form-group"><label>Laudo Vinculado (opcional)</label><select id="orc-laudo" onchange="preencherClienteDoLaudo()"><option value="">— Selecionar Laudo —</option></select></div>
+        <div class="form-group"><label>Data</label><input type="date" id="orc-data"></div>
+        <div class="form-group"><label>Validade</label><select id="orc-validade"><option>5 dias</option><option>7 dias</option><option>10 dias</option><option>15 dias</option><option>30 dias</option></select></div>
+      </div>
+      <div class="card-title" style="margin-top:0">📋 Itens do Orçamento</div>
+      <div class="orcamento-items" id="orc-items"></div>
+      <div style="display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap">
+        <button class="btn btn-secondary btn-sm" onclick="adicionarItem()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Adicionar Item</button>
+        <div class="catalogo-dropdown">
+          <button class="btn btn-ghost btn-sm" onclick="toggleCatalogo()" id="btn-catalogo"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h7"/></svg>Catálogo de Serviços</button>
+          <div class="catalogo-panel" id="catalogo-panel">
+            <div class="catalogo-search">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" placeholder="Buscar serviço..." id="catalogo-busca" oninput="filtrarCatalogo()">
+            </div>
+            <div class="catalogo-list" id="catalogo-list"></div>
+          </div>
+        </div>
+      </div>
+      <div class="total-bar">
+        <div class="total-item"><label>SUBTOTAL</label><span id="orc-subtotal">R$ 0,00</span></div>
+        <div class="total-item">
+          <label>DESCONTO</label>
+          <div style="display:flex;align-items:center;gap:6px">
+            <input type="number" id="orc-desconto" value="0" min="0" inputmode="decimal" style="width:70px;padding:4px 8px;font-size:13px" oninput="calcularTotal()">
+            <select id="orc-desc-tipo" style="width:55px;padding:4px 6px;font-size:12px" onchange="calcularTotal()"><option value="pct">%</option><option value="val">R$</option></select>
+          </div>
+        </div>
+        <div class="total-item grand"><label>TOTAL</label><span id="orc-total">R$ 0,00</span></div>
+      </div>
+      <div class="form-group" style="margin-top:16px">
+        <label>Condições de Pagamento</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px" id="pgto-opcoes">
+          <button class="pgto-btn" data-val="PIX" onclick="selecionarPgto(this)">💠 PIX</button>
+          <button class="pgto-btn" data-val="Cartão de Crédito" onclick="selecionarPgto(this)">💳 Crédito</button>
+          <button class="pgto-btn" data-val="Cartão de Débito" onclick="selecionarPgto(this)">🏧 Débito</button>
+          <button class="pgto-btn" data-val="50% Entrada + 50% Entrega" onclick="selecionarPgto(this)">✂️ 50%+50%</button>
+          <button class="pgto-btn" data-val="Dinheiro" onclick="selecionarPgto(this)">💵 Dinheiro</button>
+          <button class="pgto-btn" data-val="2x sem juros" onclick="selecionarPgto(this)">🔢 2x s/juros</button>
+          <button class="pgto-btn" data-val="3x sem juros" onclick="selecionarPgto(this)">🔢 3x s/juros</button>
+        </div>
+        <input type="hidden" id="orc-pgto" value="PIX">
+        <input type="hidden" id="orc-edit-id" value="">
+      </div>
+      <div class="form-group" style="margin-top:12px"><label>Observações</label><textarea id="orc-obs" placeholder="Garantia, prazo, condições especiais..."></textarea></div>
+      <div style="display:flex;gap:12px;margin-top:20px;flex-wrap:wrap">
+        <button class="btn btn-green" onclick="imprimirOrcamento()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Imprimir / PDF</button>
+        <button class="btn btn-primary" onclick="salvarOrcamento()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/></svg>Salvar</button>
+        <button class="btn btn-secondary" onclick="limparOrcamento()">Limpar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTÓRICO -->
+  <div id="page-historico" class="page">
+    <div style="display:flex;gap:4px;margin-bottom:20px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:4px;width:fit-content">
+      <button id="hist-tab-laudos" class="btn btn-primary btn-sm" onclick="switchHistTab('laudos')" style="border-radius:7px">📄 Laudos</button>
+      <button id="hist-tab-orcamentos" class="btn btn-ghost btn-sm" onclick="switchHistTab('orcamentos')" style="border-radius:7px">💰 Orçamentos</button>
+    </div>
+    <div id="hist-filtros-laudos" style="display:flex;gap:12px;align-items:center;margin-bottom:20px;flex-wrap:wrap">
+      <div class="search-bar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" placeholder="Buscar cliente, nº laudo..." id="hist-busca" oninput="filtrarHistorico()"></div>
+      <select id="hist-filtro-status" style="width:180px" onchange="filtrarHistorico()"><option value="">Todos os status</option><option value="entrada">Entrada</option><option value="diagnostico">Em Diagnóstico</option><option value="aguardando">Aguardando Aprovação</option><option value="em_reparo">Em Reparo</option><option value="concluido">Concluído</option><option value="entregue">Entregue</option><option value="cancelado">Cancelado</option></select>
+      <button class="btn btn-danger btn-sm" onclick="limparHistorico()">🗑️ Limpar Laudos</button>
+    </div>
+    <div id="hist-filtros-orcamentos" style="display:none;gap:12px;align-items:center;margin-bottom:20px;flex-wrap:wrap">
+      <div class="search-bar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" placeholder="Buscar cliente, nº orçamento..." id="hist-busca-orc" oninput="filtrarHistoricoOrc()"></div>
+      <button class="btn btn-danger btn-sm" onclick="limparHistoricoOrc()">🗑️ Limpar Orçamentos</button>
+    </div>
+    <div id="historico-list"></div>
+    <div id="historico-orc-list" style="display:none"></div>
+  </div>
+
+  <!-- CONFIGURAÇÕES -->
+  <div id="page-configuracoes" class="page">
+    <div class="card">
+      <div class="card-title">🏢 Dados da Empresa</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Nome da Empresa</label><input type="text" id="cfg-empresa" placeholder="TechSoluções Informática"></div>
+        <div class="form-group"><label>CNPJ / CPF</label><input type="text" id="cfg-cnpj" placeholder="00.000.000/0001-00"></div>
+        <div class="form-group"><label>Telefone</label><input type="text" id="cfg-tel" placeholder="(85) 99999-9999" inputmode="tel"></div>
+        <div class="form-group"><label>E-mail</label><input type="text" id="cfg-email" placeholder="contato@empresa.com"></div>
+        <div class="form-group full"><label>Endereço</label><input type="text" id="cfg-end" placeholder="Rua, número, bairro, cidade - Estado"></div>
+        <div class="form-group"><label>Técnico Padrão</label><input type="text" id="cfg-tecnico" placeholder="Nome do técnico"></div>
+        <div class="form-group"><label>Garantia Padrão (dias)</label><input type="number" id="cfg-garantia" value="90" min="0" inputmode="numeric"></div>
+        <div class="form-group full"><label>Rodapé / Aviso Legal</label><textarea id="cfg-rodape" placeholder="Ex: Garantia não cobre danos físicos causados pelo cliente..."></textarea></div>
+      </div>
+      <div style="margin-top:20px"><button class="btn btn-primary" onclick="salvarConfigs()">💾 Salvar Configurações</button></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">✅ Itens do Checklist</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:16px">Personalize os itens verificados durante a vistoria do equipamento.</p>
+      <div id="cfg-checklist-items" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px"></div>
+      <button class="btn btn-secondary btn-sm" onclick="adicionarChecklistItem()">➕ Adicionar Item</button>
+      <div style="margin-top:16px"><button class="btn btn-primary btn-sm" onclick="salvarChecklist()">💾 Salvar Checklist</button></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">💻 Catálogo de Equipamentos</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:16px">Cadastre marcas e modelos. Aparecem como sugestão automática ao criar laudos.</p>
+      <div id="cfg-equip-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px"></div>
+      <button class="btn btn-secondary btn-sm" onclick="abrirModalNovoEquip()">➕ Adicionar Equipamento</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">💰 Preços do Catálogo de Serviços</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:16px">Defina o valor de cada serviço. Usado automaticamente no orçamento.</p>
+      <div id="cfg-catalogo-precos" style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px"></div>
+      <button class="btn btn-primary btn-sm" onclick="salvarPrecosCatalogo()">💾 Salvar Preços</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📦 Backup de Dados</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <button class="btn btn-secondary" onclick="exportarDados()">⬇️ Exportar Dados (JSON)</button>
+        <label class="btn btn-secondary" style="cursor:pointer">⬆️ Importar Dados (JSON)<input type="file" accept=".json" style="display:none" onchange="importarDados(event)"></label>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /content -->
+</main>
+
+<!-- MODAL NOVO EQUIPAMENTO -->
+<div class="modal-overlay" id="modal-equip">
+  <div class="modal" style="max-width:680px">
+    <h2 id="modal-equip-titulo">➕ Novo Equipamento no Catálogo</h2>
+    <input type="hidden" id="modal-equip-idx" value="">
+    <div class="form-grid" style="margin-bottom:16px">
+      <div class="form-group"><label>Tipo *</label><select id="meq-tipo"><option>Notebook</option><option>Desktop / PC</option><option>All-in-One</option><option>Servidor</option><option>Tablet</option><option>Impressora</option><option>Outro</option></select></div>
+      <div class="form-group"><label>Marca *</label><input type="text" id="meq-marca" placeholder="Dell, HP, Lenovo..."></div>
+      <div class="form-group"><label>Modelo *</label><input type="text" id="meq-modelo" placeholder="Inspiron 15 3520"></div>
+      <div class="form-group"><label>Sistema Operacional</label><select id="meq-so"><option>Windows 11</option><option>Windows 10</option><option>Windows 7</option><option>Ubuntu / Linux</option><option>macOS</option><option>Sem SO</option><option>Outro</option></select></div>
+      <div class="form-group"><label>Processador</label><input type="text" id="meq-cpu" placeholder="Intel Core i5-1235U"></div>
+      <div class="form-group"><label>Memória RAM</label><input type="text" id="meq-ram" placeholder="8GB DDR4 3200MHz"></div>
+      <div class="form-group"><label>Armazenamento</label><input type="text" id="meq-hd" placeholder="SSD NVMe 512GB"></div>
+      <div class="form-group"><label>Placa de Vídeo</label><input type="text" id="meq-gpu" placeholder="Intel Iris Xe / GTX 1650"></div>
+      <div class="form-group"><label>Fonte / Bateria</label><input type="text" id="meq-fonte" placeholder="65W / Bateria 41Wh"></div>
+      <div class="form-group"><label>Placa-Mãe / Chipset</label><input type="text" id="meq-mb" placeholder="Intel H670 / B660"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="fecharModalEquip()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarEquipCatalogo()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALHES LAUDO -->
+<div class="modal-overlay" id="modal-detalhes">
+  <div class="modal" style="max-width:760px">
+    <h2>📋 Detalhes do Laudo</h2>
+    <div id="modal-content"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="fecharModal()">Fechar</button>
+      <button class="btn btn-secondary" onclick="editarLaudoAtivo()">✏️ Editar</button>
+      <button class="btn btn-green" onclick="imprimirLaudoAtivo()">🖨️ Imprimir</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav id="bottom-nav">
+  <button class="bottom-nav-btn active" onclick="navigate('dashboard');setBottomActive(this)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard
+  </button>
+  <button class="bottom-nav-btn" onclick="navigate('novo-laudo');setBottomActive(this)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>Novo
+  </button>
+  <button class="bottom-nav-btn" onclick="navigate('orcamento');setBottomActive(this)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Orçamento
+  </button>
+  <button class="bottom-nav-btn" onclick="navigate('historico');setBottomActive(this)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Histórico
+  </button>
+  <button class="bottom-nav-btn" onclick="navigate('configuracoes');setBottomActive(this)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Config
+  </button>
+</nav>
+
+<script>
+// ====================== DATA ======================
+let laudos = JSON.parse(localStorage.getItem('laudos') || '[]');
+let orcamentos = JSON.parse(localStorage.getItem('orcamentos') || '[]');
+let configs = JSON.parse(localStorage.getItem('configs') || '{}');
+let checklistPadrao = JSON.parse(localStorage.getItem('checklistPadrao') || '[]');
+let checklistAtual = {};
+let laudoAtivo = null;
+let itemCounter = 0;
+let catalogoAberto = false;
+
+if (!checklistPadrao.length) {
+  checklistPadrao = [
+    'Liga / Funciona', 'Teclado', 'Touchpad / Mouse', 'Tela / Display',
+    'Bateria / Fonte', 'Entradas USB', 'HDMI / Saídas de Vídeo',
+    'Leitor de Cartão', 'Wi-Fi / Bluetooth', 'Câmera / Webcam',
+    'Cooler / Ventilação', 'Alto-falante / Áudio', 'Dobradiças / Estrutura',
+    'HD / SSD Detectado'
+  ];
+  localStorage.setItem('checklistPadrao', JSON.stringify(checklistPadrao));
+}
+
+const EQUIP_ICONS = {
+  'Notebook': '💻', 'Desktop / PC': '🖥️', 'All-in-One': '🖥️',
+  'Servidor': '🗄️', 'Tablet': '📱', 'Impressora': '🖨️', 'Outro': '🔧'
+};
+
+// ====================== EQUIPAMENTOS BASE ======================
+const equipamentosBase = [
+  // DELL
+  { tipo:'Notebook', marca:'Dell', modelo:'Inspiron 15 3520', so:'Windows 11', cpu:'Intel Core i5-1235U', ram:'8GB DDR4 3200MHz', hd:'SSD NVMe 256GB', gpu:'Intel Iris Xe', fonte:'65W', mb:'Dell 0XXXXX' },
+  { tipo:'Notebook', marca:'Dell', modelo:'Inspiron 15 3511', so:'Windows 11', cpu:'Intel Core i5-1135G7', ram:'8GB DDR4', hd:'SSD 256GB', gpu:'Intel Iris Xe', fonte:'65W', mb:'' },
+  { tipo:'Notebook', marca:'Dell', modelo:'Inspiron 15 5510', so:'Windows 11', cpu:'Intel Core i5-11320H', ram:'8GB DDR4', hd:'SSD NVMe 512GB', gpu:'Intel Iris Xe', fonte:'65W', mb:'' },
+  { tipo:'Notebook', marca:'Dell', modelo:'XPS 15 9520', so:'Windows 11', cpu:'Intel Core i7-12700H', ram:'16GB DDR5', hd:'SSD NVMe 512GB', gpu:'NVIDIA RTX 3050 Ti', fonte:'130W', mb:'' },
+  { tipo:'Notebook', marca:'Dell', modelo:'Latitude 5420', so:'Windows 10', cpu:'Intel Core i5-1145G7', ram:'8GB DDR4', hd:'SSD 256GB', gpu:'Intel Iris Xe', fonte:'65W', mb:'' },
+  { tipo:'Notebook', marca:'Dell', modelo:'Vostro 14 3400', so:'Windows 10', cpu:'Intel Core i3-1115G4', ram:'4GB DDR4', hd:'HDD 1TB', gpu:'Intel UHD Graphics', fonte:'65W', mb:'' },
+  { tipo:'Desktop / PC', marca:'Dell', modelo:'Optiplex 3090', so:'Windows 10', cpu:'Intel Core i5-10505', ram:'8GB DDR4', hd:'SSD 256GB', gpu:'Intel UHD 630', fonte:'260W', mb:'Dell 0XXXXX' },
+  // HP
+  { tipo:'Notebook', marca:'HP', modelo:'Pavilion 15-eh3', so:'Windows 11', cpu:'AMD Ryzen 5 7530U', ram:'8GB DDR4', hd:'SSD NVMe 512GB', gpu:'AMD Radeon Vega 7', fonte:'65W', mb:'' },
+  { tipo:'Notebook', marca:'HP', modelo:'Victus 15-fa1', so:'Windows 11', cpu:'Intel Core i5-12450H', ram:'8GB DDR4', hd:'SSD NVMe 512GB', gpu:'NVIDIA GTX 1650', fonte:'150W', mb:'' },
+  { tipo:'Notebook', marca:'HP', modelo:'ProBook 440 G9', so:'Windows 11', cpu:'Intel Core i5-1235U', ram:'8GB DDR4', hd:'SSD 256GB', gpu:'Intel Iris Xe', fonte:'65W', mb:'' },
+  { tipo:'Notebook', marca:'HP', modelo:'EliteBook 840 G9', so:'Windows 11', cpu:'Intel Core i7-1255U', ram:'16GB DDR5', hd:'SSD NVMe 512GB', gpu:'Intel Iris Xe', fonte:'65W', mb:'' },
+  { tipo:'Notebook', marca:'HP', modelo:'Compaq Presario CQ43', so:'Windows 7', cpu:'Intel Pentium B960', ram:'2GB DDR3', hd:'HDD 500GB', gpu:'Intel HD 2000', fonte:'65W', mb:'' },
+  { tipo:'Desktop / PC', marca:'HP', modelo:'Compaq 8200 Elite', so:'Windows 10', cpu:'Intel Core i5-2400', ram:'4GB DDR3', hd:'HDD 500GB', gpu:'Intel HD 2000', fonte:'240W SFF', mb:'HP 1494' },
+  // LENOVO
+  { tipo:'Notebook', marca:'Lenovo', modelo:'IdeaPad 3 15IAU7', so:'Windows 11', cpu:'Intel Core i5-1235U', ram:'8GB DDR4', hd:'SSD NVMe 256GB', gpu:'Intel Iris Xe', fonte:'65W', mb:'' },
+  { tipo:'Notebook', marca:'Lenovo', modelo:'IdeaPad Gaming 3 15IAH7', so:'Windows 11', cpu:'Intel Core i5-12450H', ram:'8GB DDR4', hd:'SSD NVMe 512GB', gpu:'NVIDIA RTX 3050', fonte:'170W', mb:'' },
+  { tipo:'Notebook', marca:'Lenovo', modelo:'ThinkPad L14 Gen 3', so:'Windows 11', cpu:'Intel Core i7-1255U', ram:'16GB DDR4', hd:'SSD NVMe 512GB', gpu:'Intel Iris Xe', fonte:'65W', mb:'' },
+  { tipo:'Notebook', marca:'Lenovo', modelo:'ThinkPad E14 Gen 4', so:'Windows 11', cpu:'Intel Core i5-1235U', ram:'8GB DDR4', hd:'SSD 256GB', gpu:'Intel Iris Xe', fonte:'65W', mb:'' },
+  { tipo:'Notebook', marca:'Lenovo', modelo:'Legion 5 15ARH7H', so:'Windows 11', cpu:'AMD Ryzen 5 6600H', ram:'16GB DDR5', hd:'SSD NVMe 512GB', gpu:'NVIDIA RTX 3060', fonte:'230W', mb:'' },
+  { tipo:'Notebook', marca:'Lenovo', modelo:'Chromebook Flex 3', so:'ChromeOS', cpu:'Intel Celeron N4020', ram:'4GB LPDDR4', hd:'eMMC 64GB', gpu:'Intel UHD 600', fonte:'45W', mb:'' },
+  // ASUS
+  { tipo:'Notebook', marca:'Asus', modelo:'VivoBook 15 X1502', so:'Windows 11', cpu:'Intel Core i5-1235U', ram:'8GB DDR4', hd:'SSD NVMe 512GB', gpu:'Intel Iris Xe', fonte:'65W', mb:'' },
+  { tipo:'Notebook', marca:'Asus', modelo:'ROG Strix G15 G513', so:'Windows 11', cpu:'AMD Ryzen 7 6800H', ram:'16GB DDR5', hd:'SSD NVMe 1TB', gpu:'NVIDIA RTX 3070 Ti', fonte:'280W', mb:'' },
+  { tipo:'Notebook', marca:'Asus', modelo:'TUF Gaming F15 FX507', so:'Windows 11', cpu:'Intel Core i5-12500H', ram:'8GB DDR4', hd:'SSD NVMe 512GB', gpu:'NVIDIA RTX 3050', fonte:'180W', mb:'' },
+  { tipo:'Notebook', marca:'Asus', modelo:'ZenBook 14 UX425', so:'Windows 11', cpu:'Intel Core i5-1135G7', ram:'8GB LPDDR4X', hd:'SSD NVMe 512GB', gpu:'Intel Iris Xe', fonte:'65W', mb:'' },
+  { tipo:'Notebook', marca:'Asus', modelo:'Notebook E210MA', so:'Windows 11 S', cpu:'Intel Celeron N4020', ram:'4GB DDR4', hd:'eMMC 64GB', gpu:'Intel UHD 600', fonte:'33W', mb:'' },
+  // ACER
+  { tipo:'Notebook', marca:'Acer', modelo:'Aspire 5 A515-57', so:'Windows 11', cpu:'Intel Core i5-1235U', ram:'8GB DDR4', hd:'SSD NVMe 512GB', gpu:'Intel Iris Xe', fonte:'65W', mb:'' },
+  { tipo:'Notebook', marca:'Acer', modelo:'Nitro 5 AN515-58', so:'Windows 11', cpu:'Intel Core i5-12500H', ram:'8GB DDR4', hd:'SSD NVMe 512GB', gpu:'NVIDIA RTX 3050', fonte:'180W', mb:'' },
+  { tipo:'Notebook', marca:'Acer', modelo:'Swift 3 SF314-512', so:'Windows 11', cpu:'Intel Core i5-1240P', ram:'8GB LPDDR4X', hd:'SSD NVMe 512GB', gpu:'Intel Iris Xe', fonte:'65W', mb:'' },
+  { tipo:'Notebook', marca:'Acer', modelo:'Aspire 3 A315-58', so:'Windows 11', cpu:'Intel Core i3-1115G4', ram:'4GB DDR4', hd:'HDD 1TB', gpu:'Intel UHD Graphics', fonte:'45W', mb:'' },
+  { tipo:'Notebook', marca:'Acer', modelo:'Predator Helios 300', so:'Windows 11', cpu:'Intel Core i7-12700H', ram:'16GB DDR5', hd:'SSD NVMe 512GB', gpu:'NVIDIA RTX 3060', fonte:'230W', mb:'' },
+  // SAMSUNG
+  { tipo:'Notebook', marca:'Samsung', modelo:'Galaxy Book2 NP550', so:'Windows 11', cpu:'Intel Core i5-1235U', ram:'8GB LPDDR4X', hd:'SSD NVMe 256GB', gpu:'Intel Iris Xe', fonte:'65W', mb:'' },
+  { tipo:'Notebook', marca:'Samsung', modelo:'Galaxy Book Pro 360', so:'Windows 11', cpu:'Intel Core i7-1165G7', ram:'16GB LPDDR4X', hd:'SSD NVMe 512GB', gpu:'Intel Iris Xe', fonte:'65W', mb:'' },
+  // APPLE
+  { tipo:'Notebook', marca:'Apple', modelo:'MacBook Air M1 2020', so:'macOS', cpu:'Apple M1', ram:'8GB Unificada', hd:'SSD NVMe 256GB', gpu:'GPU Apple M1 7-core', fonte:'30W USB-C', mb:'' },
+  { tipo:'Notebook', marca:'Apple', modelo:'MacBook Air M2 2022', so:'macOS', cpu:'Apple M2', ram:'8GB Unificada', hd:'SSD NVMe 256GB', gpu:'GPU Apple M2 8-core', fonte:'35W USB-C', mb:'' },
+  { tipo:'Notebook', marca:'Apple', modelo:'MacBook Pro 14" M3', so:'macOS', cpu:'Apple M3', ram:'16GB Unificada', hd:'SSD NVMe 512GB', gpu:'GPU Apple M3 10-core', fonte:'67W MagSafe 3', mb:'' },
+  { tipo:'Notebook', marca:'Apple', modelo:'MacBook Pro 15" Mid 2015', so:'macOS', cpu:'Intel Core i7-4750HQ', ram:'16GB DDR3', hd:'SSD 512GB', gpu:'Intel Iris Pro / AMD R9 M370X', fonte:'85W MagSafe 2', mb:'' },
+  // DESKTOP GENÉRICO
+  { tipo:'Desktop / PC', marca:'Genérico', modelo:'PC Gamer Básico', so:'Windows 11', cpu:'Intel Core i5-12400F', ram:'16GB DDR4 3200MHz', hd:'SSD NVMe 480GB', gpu:'NVIDIA GTX 1650', fonte:'500W 80Plus Bronze', mb:'Gigabyte B660M DS3H' },
+  { tipo:'Desktop / PC', marca:'Genérico', modelo:'PC Escritório', so:'Windows 10', cpu:'Intel Core i3-10100', ram:'8GB DDR4 2666MHz', hd:'HDD 1TB + SSD 120GB', gpu:'Intel UHD 630', fonte:'400W', mb:'ASUS Prime H410M' },
+  { tipo:'Desktop / PC', marca:'Genérico', modelo:'PC AMD Budget', so:'Windows 11', cpu:'AMD Ryzen 5 5600G', ram:'16GB DDR4 3200MHz', hd:'SSD NVMe 512GB', gpu:'AMD Radeon Vega 7 (integrada)', fonte:'500W 80Plus', mb:'MSI B550M Pro-VDH' },
+  // IMPRESSORAS
+  { tipo:'Impressora', marca:'HP', modelo:'LaserJet Pro M404n', so:'Sem SO', cpu:'', ram:'', hd:'', gpu:'', fonte:'', mb:'' },
+  { tipo:'Impressora', marca:'Epson', modelo:'EcoTank L3150', so:'Sem SO', cpu:'', ram:'', hd:'', gpu:'', fonte:'', mb:'' },
+  { tipo:'Impressora', marca:'Canon', modelo:'PIXMA G2160', so:'Sem SO', cpu:'', ram:'', hd:'', gpu:'', fonte:'', mb:'' },
+  { tipo:'Impressora', marca:'Brother', modelo:'MFC-L2740DW', so:'Sem SO', cpu:'', ram:'', hd:'', gpu:'', fonte:'', mb:'' },
+  // TABLETS
+  { tipo:'Tablet', marca:'Apple', modelo:'iPad 9ª Geração', so:'iPadOS', cpu:'Apple A13 Bionic', ram:'3GB', hd:'64GB', gpu:'GPU 4-core', fonte:'20W USB-C', mb:'' },
+  { tipo:'Tablet', marca:'Samsung', modelo:'Galaxy Tab A8', so:'Android', cpu:'Unisoc T618', ram:'3GB', hd:'32GB', gpu:'Mali-G52', fonte:'15W USB-C', mb:'' },
+];
+
+// ====================== CATÁLOGO DE SERVIÇOS ======================
+const catalogoServicos = [
+  { categoria: '🖥️ Sistema Operacional', itens: [
+    { nome: 'Formatação + Instalação Windows' }, { nome: 'Formatação + Instalação Linux' },
+    { nome: 'Reinstalação do Windows (sem formatar)' }, { nome: 'Ativação do Windows' },
+    { nome: 'Instalação de Drivers' }, { nome: 'Atualização do Sistema Operacional' },
+    { nome: 'Instalação de Programas Básicos' }, { nome: 'Remoção de Vírus / Malware' },
+    { nome: 'Limpeza de Registro e Otimização' },
+  ]},
+  { categoria: '🔧 Hardware', itens: [
+    { nome: 'Troca de HD por SSD' }, { nome: 'Upgrade de Memória RAM' },
+    { nome: 'Troca de Tela (Notebook)' }, { nome: 'Troca de Bateria (Notebook)' },
+    { nome: 'Troca de Teclado (Notebook)' }, { nome: 'Troca de Fonte ATX' },
+    { nome: 'Troca de Placa de Vídeo' }, { nome: 'Limpeza de Cooler / Pasta Térmica' },
+    { nome: 'Reparo de Conector de Carga' }, { nome: 'Reparo de Dobradiça' },
+    { nome: 'Diagnóstico Técnico Completo' }, { nome: 'Substituição da Placa-Mãe' },
+    { nome: 'Configuração de BIOS / UEFI' },
+  ]},
+  { categoria: '🌐 Rede e Conectividade', itens: [
+    { nome: 'Configuração de Wi-Fi' }, { nome: 'Configuração de VPN' },
+    { nome: 'Instalação de Placa de Rede' }, { nome: 'Configuração de Roteador' },
+    { nome: 'Diagnóstico de Conectividade' },
+  ]},
+  { categoria: '🖨️ Impressoras', itens: [
+    { nome: 'Instalação de Impressora' }, { nome: 'Desobstrução de Cabeça de Impressão' },
+    { nome: 'Recarga de Toner' }, { nome: 'Recarga de Cartucho' },
+    { nome: 'Troca de Fusível / Fusora' },
+  ]},
+  { categoria: '📱 Mobile / Outros', itens: [
+    { nome: 'Diagnóstico de Tablet' }, { nome: 'Troca de Tela de Tablet' },
+    { nome: 'Recuperação de Dados' }, { nome: 'Backup de Dados' },
+    { nome: 'Configuração de E-mail / Outlook' }, { nome: 'Suporte Remoto (hora)' },
+    { nome: 'Visita Técnica' },
+  ]},
+];
+
+// ====================== UTILS ======================
+function v(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+function hoje() { return new Date().toISOString().split('T')[0]; }
+function formatarData(d) {
+  if (!d) return '—';
+  const parts = d.split('-');
+  if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  return d;
+}
+function gerarNumero(prefix, arr, field) {
+  const ano = new Date().getFullYear();
+  const nums = arr.map(x => {
+    const m = (x[field]||'').match(/\d+$/);
+    return m ? parseInt(m[0]) : 0;
+  });
+  const next = nums.length ? Math.max(...nums) + 1 : 1;
+  return `${prefix}${ano}-${String(next).padStart(4,'0')}`;
+}
+function gerarNumeroLaudo() { return gerarNumero('LAU', laudos, 'num'); }
+function gerarNumeroOrc() { return gerarNumero('ORC', orcamentos, 'num'); }
+function toast(msg, tipo='ok') {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = 'toast' + (tipo === 'error' ? ' error' : '');
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+function badgeStatus(status) {
+  const map = {
+    entrada:    ['badge-blue',   '📥 Entrada'],
+    diagnostico:['badge-yellow', '🔍 Diagnóstico'],
+    aguardando: ['badge-yellow', '⏳ Aguardando'],
+    em_reparo:  ['badge-purple', '🔧 Em Reparo'],
+    concluido:  ['badge-green',  '✅ Concluído'],
+    entregue:   ['badge-green',  '📦 Entregue'],
+    cancelado:  ['badge-red',    '❌ Cancelado'],
+  };
+  const [cls, label] = map[status] || ['badge-blue', status];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+function getConfigs() { return JSON.parse(localStorage.getItem('configs') || '{}'); }
+function getPrecosCatalogo() { return JSON.parse(localStorage.getItem('precosCatalogo') || '{}'); }
+function getEquipCatalogo() {
+  const custom = JSON.parse(localStorage.getItem('equipCatalogo') || '[]');
+  return [...equipamentosBase, ...custom];
+}
+
+// ====================== NAVIGATE ======================
+const tabIds = ['tab-cliente', 'tab-equipamento', 'tab-diagnostico', 'tab-checklist'];
+
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  const sideBtn = document.querySelector(`button.nav-btn[onclick*="'${page}'"]`);
+  if (sideBtn) sideBtn.classList.add('active');
+  const titles = { dashboard:'Dashboard', 'novo-laudo':'Novo Laudo', orcamento:'Orçamento', historico:'Histórico', configuracoes:'Configurações' };
+  document.getElementById('page-title').textContent = titles[page] || page;
+  if (page === 'dashboard') renderDashboard();
+  if (page === 'historico') { switchHistTab('laudos'); }
+  if (page === 'novo-laudo') { renderChecklist(); navegarTab(0); }
+  if (page === 'configuracoes') { carregarConfigs(); renderCfgChecklist(); }
+  if (page === 'orcamento') {
+    popularSelectLaudos();
+    document.getElementById('orc-data').value = hoje();
+    if (!document.getElementById('orc-items').children.length) adicionarItem();
+    // Selecionar PIX por padrão se não houver seleção
+    if (!document.querySelector('.pgto-btn.selected')) {
+      const pix = document.querySelector('.pgto-btn[data-val="PIX"]');
+      if (pix) pix.classList.add('selected');
+    }
+  }
+  closeSidebar();
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+
+function navegarTab(idx) {
+  if (idx < 0 || idx >= tabIds.length) return;
+  const page = document.getElementById('page-novo-laudo');
+  page.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
+  page.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById(tabIds[idx]).classList.add('active');
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+
+function switchTab(btn, tabId) {
+  btn.closest('.page').querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.closest('.page').querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(tabId).classList.add('active');
+}
+
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  if (sidebar.classList.contains('open')) { closeSidebar(); }
+  else { sidebar.classList.add('open'); overlay.classList.add('open'); document.body.style.overflow = 'hidden'; }
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function setBottomActive(btn) {
+  document.querySelectorAll('.bottom-nav-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// Swipe to open/close sidebar
+(function() {
+  let startX = 0;
+  document.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive:true });
+  document.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - startX;
+    const sidebar = document.getElementById('sidebar');
+    if (dx < -60 && sidebar.classList.contains('open')) closeSidebar();
+    if (dx > 60 && startX < 30 && !sidebar.classList.contains('open')) toggleSidebar();
+  }, { passive:true });
+})();
+
+// ====================== CHECKLIST ======================
+function renderChecklist() {
+  const container = document.getElementById('checklist-items');
+  if (!container) return;
+  container.innerHTML = checklistPadrao.map((item, i) => {
+    const st = checklistAtual[i + '_status'] || 'na';
+    return `
+    <div class="check-item" id="chk-row-${i}">
+      <input type="checkbox" id="chk-${i}" ${checklistAtual[i] ? 'checked' : ''} onchange="toggleCheck(${i})">
+      <span>${item}</span>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button class="check-status-btn ${st === 'ok' ? 'ok' : ''}" onclick="setCheckStatus(${i},'ok')">✅ OK</button>
+        <button class="check-status-btn ${st === 'defeito' ? 'defeito' : ''}" onclick="setCheckStatus(${i},'defeito')">❌ Defeito</button>
+        <button class="check-status-btn ${st === 'na' ? '' : ''}" onclick="setCheckStatus(${i},'na')" style="font-size:10px">— N/A</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleCheck(i) {
+  const cb = document.getElementById('chk-' + i);
+  checklistAtual[i] = cb.checked;
+}
+
+function setCheckStatus(i, status) {
+  checklistAtual[i + '_status'] = status;
+  if (status === 'ok') checklistAtual[i] = true;
+  if (status === 'defeito') checklistAtual[i] = true;
+  renderChecklist();
+}
+
+// ====================== LAUDOS ======================
+function salvarLaudo() {
+  const nome = v('cli-nome').trim();
+  if (!nome) { toast('Informe o nome do cliente!', 'error'); navegarTab(0); return; }
+  const marca = v('eq-marca').trim();
+  if (!marca) { toast('Informe a marca do equipamento!', 'error'); navegarTab(1); return; }
+
+  const numInput = v('laudo-num').trim();
+  let num = numInput || gerarNumeroLaudo();
+
+  const laudo = {
+    id: Date.now(),
+    num,
+    data: v('laudo-data') || hoje(),
+    entrega: v('laudo-entrega'),
+    status: v('laudo-status') || 'entrada',
+    cliente: { nome, doc: v('cli-doc'), tel: v('cli-tel'), email: v('cli-email'), end: v('cli-end') },
+    equipamento: { tipo: v('eq-tipo'), marca, modelo: v('eq-modelo'), serie: v('eq-serie'), pat: v('eq-pat'), so: v('eq-so'), acess: v('eq-acess'), cond: v('eq-cond') },
+    hardware: { cpu: v('hw-cpu'), ram: v('hw-ram'), hd: v('hw-hd'), gpu: v('hw-gpu'), fonte: v('hw-fonte'), mb: v('hw-mb') },
+    diagnostico: { reclamacao: v('diag-recl'), analise: v('diag-analise'), servicos: v('diag-servicos'), obs: v('diag-obs'), causa: v('diag-causa'), urgencia: v('diag-urgencia'), tecnico: v('diag-tecnico') },
+    checklist: { ...checklistAtual }
+  };
+
+  // Verificar se é edição
+  const existing = laudos.findIndex(l => l.num === num && l.id !== laudo.id);
+  const editIdx = laudos.findIndex(l => l.num === num);
+  if (editIdx > -1 && laudos[editIdx].id !== laudo.id) {
+    // Num duplicado, gerar novo
+    laudo.num = gerarNumeroLaudo();
+  }
+
+  // Checar se estamos editando (mesmo num e mesmo id não é possível, mas pode haver edição via editarLaudo que usa mesmo num)
+  const existingById = laudos.findIndex(l => l.num === num);
+  if (existingById > -1) {
+    laudos[existingById] = { ...laudos[existingById], ...laudo, id: laudos[existingById].id };
+    toast('✅ Laudo atualizado!');
+  } else {
+    laudos.unshift(laudo);
+    toast('✅ Laudo salvo! Nº ' + laudo.num);
+  }
+
+  localStorage.setItem('laudos', JSON.stringify(laudos));
+  renderDashboard();
+  limparFormulario();
+  navigate('historico');
+}
+
+function limparFormulario() {
+  const ids = ['cli-nome','cli-doc','cli-tel','cli-email','cli-end','laudo-num','laudo-entrega','eq-marca','eq-modelo','eq-serie','eq-pat','eq-acess','eq-cond','hw-cpu','hw-ram','hw-hd','hw-gpu','hw-fonte','hw-mb','diag-recl','diag-analise','diag-servicos','diag-obs','diag-tecnico'];
+  ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  document.getElementById('laudo-data').value = hoje();
+  document.getElementById('laudo-status').value = 'entrada';
+  document.getElementById('eq-tipo').value = 'Notebook';
+  document.getElementById('eq-so').value = 'Windows 11';
+  document.getElementById('diag-causa').value = '';
+  document.getElementById('diag-urgencia').value = 'normal';
+  const cfg = getConfigs();
+  if (cfg.tecnico) document.getElementById('diag-tecnico').value = cfg.tecnico;
+  checklistAtual = {};
+  limparModeloSelecionado();
+  renderChecklist();
+  navegarTab(0);
+}
+
+// ====================== DASHBOARD ======================
+function renderDashboard() {
+  const total = laudos.length;
+  const andamento = laudos.filter(l => ['entrada','diagnostico','aguardando','em_reparo'].includes(l.status)).length;
+  const concluido = laudos.filter(l => ['concluido','entregue'].includes(l.status)).length;
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-andamento').textContent = andamento;
+  document.getElementById('stat-concluido').textContent = concluido;
+  let fat = 0;
+  orcamentos.forEach(o => {
+    const str = (o.total || '').replace('R$','').replace(/\./g,'').replace(',','.').trim();
+    fat += parseFloat(str) || 0;
+  });
+  document.getElementById('stat-faturamento').textContent = 'R$' + fat.toLocaleString('pt-BR', { minimumFractionDigits:0, maximumFractionDigits:0 });
+
+  const container = document.getElementById('dashboard-list');
+  if (!laudos.length) {
+    container.innerHTML = `<div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg><p>Nenhum laudo cadastrado.<br>Clique em <strong>Novo Laudo</strong> para começar.</p></div>`;
+    return;
+  }
+  const recentes = laudos.slice(0, 10);
+  const isMobile = window.innerWidth < 700;
+  if (isMobile) {
+    container.innerHTML = recentes.map(l => `
+      <div class="history-item" onclick="verLaudo(${l.id})">
+        <div class="history-item-icon" style="background:var(--surface3)">${EQUIP_ICONS[l.equipamento.tipo] || '🔧'}</div>
+        <div class="history-item-info">
+          <h4>${l.cliente.nome} <span style="color:var(--text3);font-weight:400;font-size:12px">— ${l.num}</span></h4>
+          <p>${l.equipamento.marca} ${l.equipamento.modelo || ''} · ${formatarData(l.data)}</p>
+          <div style="margin-top:6px">${badgeStatus(l.status)}</div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text3);flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>`).join('');
+  } else {
+    container.innerHTML = `<div class="table-wrap"><table>
+      <thead><tr><th>Nº</th><th>Cliente</th><th>Equipamento</th><th>Data</th><th>Status</th><th>Ações</th></tr></thead>
+      <tbody>${recentes.map(l => `<tr>
+        <td class="highlight" style="font-family:var(--mono)">${l.num}</td>
+        <td class="highlight">${l.cliente.nome}</td>
+        <td>${l.equipamento.marca} ${l.equipamento.modelo || ''}</td>
+        <td>${formatarData(l.data)}</td>
+        <td>${badgeStatus(l.status)}</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="verLaudo(${l.id})">Ver</button></td>
+      </tr>`).join('')}</tbody>
+    </table></div>`;
+  }
+}
+
+// ====================== HISTÓRICO ======================
+let histTabAtual = 'laudos';
+
+function switchHistTab(tab) {
+  histTabAtual = tab;
+  const isLaudos = tab === 'laudos';
+  document.getElementById('hist-tab-laudos').className = isLaudos ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm';
+  document.getElementById('hist-tab-orcamentos').className = isLaudos ? 'btn btn-ghost btn-sm' : 'btn btn-primary btn-sm';
+  document.getElementById('hist-filtros-laudos').style.display = isLaudos ? 'flex' : 'none';
+  document.getElementById('hist-filtros-orcamentos').style.display = isLaudos ? 'none' : 'flex';
+  document.getElementById('historico-list').style.display = isLaudos ? 'block' : 'none';
+  document.getElementById('historico-orc-list').style.display = isLaudos ? 'none' : 'block';
+  if (isLaudos) renderHistorico(); else renderHistoricoOrc();
+}
+
+function renderHistorico(busca='', statusFiltro='') {
+  const container = document.getElementById('historico-list');
+  let filtrados = laudos;
+  if (busca) filtrados = filtrados.filter(l => l.cliente.nome.toLowerCase().includes(busca.toLowerCase()) || l.num.toLowerCase().includes(busca.toLowerCase()));
+  if (statusFiltro) filtrados = filtrados.filter(l => l.status === statusFiltro);
+  if (!filtrados.length) {
+    container.innerHTML = `<div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><p>Nenhum laudo encontrado.</p></div>`;
+    return;
+  }
+  container.innerHTML = filtrados.map(l => {
+    const orcsVinc = orcamentos.filter(o => o.laudoRef === l.num);
+    const orcsTag = orcsVinc.length ? `<span style="font-size:11px;background:rgba(124,77,255,0.15);color:var(--accent2);border:1px solid rgba(124,77,255,0.25);border-radius:12px;padding:2px 8px;font-family:var(--mono);white-space:nowrap">💰 ${orcsVinc.length} orç.</span>` : '';
+    return `<div class="history-item" onclick="verLaudo(${l.id})">
+      <div class="history-item-icon" style="background:var(--surface3)">${EQUIP_ICONS[l.equipamento.tipo] || '🔧'}</div>
+      <div class="history-item-info">
+        <h4>${l.cliente.nome} <span style="color:var(--text3);font-weight:400;font-size:12px">— ${l.num}</span></h4>
+        <p>${l.equipamento.tipo} ${l.equipamento.marca} ${l.equipamento.modelo || ''} · ${formatarData(l.data)}</p>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;align-items:center">${badgeStatus(l.status)}${orcsTag}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;align-items:flex-end">
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editarLaudo(${l.id})">✏️ Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deletarLaudo(${l.id})">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderHistoricoOrc(busca='') {
+  const container = document.getElementById('historico-orc-list');
+  let filtrados = orcamentos;
+  if (busca) filtrados = filtrados.filter(o => o.cliente.toLowerCase().includes(busca.toLowerCase()) || o.num.toLowerCase().includes(busca.toLowerCase()));
+  if (!filtrados.length) {
+    container.innerHTML = `<div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><p>Nenhum orçamento salvo ainda.</p></div>`;
+    return;
+  }
+  container.innerHTML = filtrados.map(o => {
+    const laudoVinc = o.laudoRef ? laudos.find(l => l.num === o.laudoRef) : null;
+    const laudoTag = laudoVinc ? `<span style="font-size:11px;background:rgba(0,229,255,0.1);color:var(--accent);border:1px solid rgba(0,229,255,0.2);border-radius:12px;padding:2px 8px;font-family:var(--mono);cursor:pointer" onclick="event.stopPropagation();verLaudo(${laudoVinc.id})">📋 ${o.laudoRef}</span>` : (o.laudoRef ? `<span style="font-size:11px;color:var(--text3);font-family:var(--mono)">📋 ${o.laudoRef}</span>` : '');
+    return `<div class="history-item">
+      <div class="history-item-icon" style="background:rgba(124,77,255,0.15)">💰</div>
+      <div class="history-item-info">
+        <h4>${o.cliente} <span style="color:var(--text3);font-weight:400;font-size:12px">— ${o.num}</span></h4>
+        <p>${formatarData(o.data)} · Pgto: ${o.pgto || '—'}</p>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;align-items:center">${laudoTag}<span class="history-item-value">${o.total}</span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;align-items:flex-end">
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editarOrcamento(${o.id})">✏️ Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deletarOrcamento(${o.id})">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filtrarHistorico() { renderHistorico(v('hist-busca'), v('hist-filtro-status')); }
+function filtrarHistoricoOrc() { renderHistoricoOrc(v('hist-busca-orc')); }
+
+function limparHistorico() {
+  if (!confirm('Excluir TODOS os laudos? Esta ação não pode ser desfeita.')) return;
+  laudos = []; localStorage.setItem('laudos', JSON.stringify(laudos));
+  renderHistorico(); renderDashboard(); toast('Histórico limpo.');
+}
+function limparHistoricoOrc() {
+  if (!confirm('Excluir TODOS os orçamentos?')) return;
+  orcamentos = []; localStorage.setItem('orcamentos', JSON.stringify(orcamentos));
+  renderHistoricoOrc(); renderDashboard(); toast('Orçamentos limpos.');
+}
+function deletarLaudo(id) {
+  if (!confirm('Excluir este laudo?')) return;
+  laudos = laudos.filter(l => l.id !== id);
+  localStorage.setItem('laudos', JSON.stringify(laudos));
+  renderHistorico(v('hist-busca'), v('hist-filtro-status')); renderDashboard(); toast('Laudo removido.');
+}
+function deletarOrcamento(id) {
+  if (!confirm('Excluir este orçamento?')) return;
+  orcamentos = orcamentos.filter(o => o.id !== id);
+  localStorage.setItem('orcamentos', JSON.stringify(orcamentos));
+  renderHistoricoOrc(v('hist-busca-orc')); renderDashboard(); toast('Orçamento removido.');
+}
+
+function verLaudo(id) {
+  const l = laudos.find(l => l.id === id);
+  if (!l) return;
+  laudoAtivo = l;
+  document.getElementById('modal-content').innerHTML = `
+    <div class="form-grid" style="margin-bottom:16px">
+      <div><label>Nº Laudo</label><div style="font-family:var(--mono);color:var(--accent)">${l.num}</div></div>
+      <div><label>Data</label><div>${formatarData(l.data)}</div></div>
+      <div><label>Status</label><div>${badgeStatus(l.status)}</div></div>
+      <div><label>Previsão</label><div>${l.entrega ? formatarData(l.entrega) : '—'}</div></div>
+    </div>
+    <div class="divider"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin-bottom:12px;font-size:13px">
+      <div><b style="color:var(--text2)">Cliente:</b> ${l.cliente.nome}</div>
+      <div><b style="color:var(--text2)">Telefone:</b> ${l.cliente.tel || '—'}</div>
+      <div><b style="color:var(--text2)">Equipamento:</b> ${l.equipamento.tipo} ${l.equipamento.marca} ${l.equipamento.modelo || ''}</div>
+      <div><b style="color:var(--text2)">S.O.:</b> ${l.equipamento.so}</div>
+      <div><b style="color:var(--text2)">CPU:</b> ${l.hardware.cpu || '—'}</div>
+      <div><b style="color:var(--text2)">RAM:</b> ${l.hardware.ram || '—'}</div>
+    </div>
+    <div class="divider"></div>
+    <div style="margin-bottom:10px"><b style="font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Análise Técnica</b><p style="font-size:13px;margin-top:6px;color:var(--text2);line-height:1.6">${l.diagnostico.analise || '—'}</p></div>
+    ${l.diagnostico.servicos ? `<div style="margin-bottom:10px"><b style="font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Serviços</b><p style="font-size:13px;margin-top:6px;color:var(--text2);line-height:1.6">${l.diagnostico.servicos}</p></div>` : ''}
+  `;
+  document.getElementById('modal-detalhes').classList.add('open');
+}
+
+function fecharModal() { document.getElementById('modal-detalhes').classList.remove('open'); }
+function editarLaudoAtivo() { fecharModal(); if (laudoAtivo) editarLaudo(laudoAtivo.id); }
+
+function editarLaudo(id) {
+  const l = laudos.find(l => l.id === id);
+  if (!l) return;
+  laudoAtivo = l;
+  const fields = {
+    'cli-nome': l.cliente.nome, 'cli-doc': l.cliente.doc, 'cli-tel': l.cliente.tel,
+    'cli-email': l.cliente.email, 'cli-end': l.cliente.end, 'laudo-num': l.num,
+    'laudo-data': l.data, 'laudo-entrega': l.entrega,
+    'eq-marca': l.equipamento.marca, 'eq-modelo': l.equipamento.modelo,
+    'eq-serie': l.equipamento.serie, 'eq-pat': l.equipamento.pat,
+    'eq-acess': l.equipamento.acess, 'eq-cond': l.equipamento.cond,
+    'hw-cpu': l.hardware.cpu, 'hw-ram': l.hardware.ram, 'hw-hd': l.hardware.hd,
+    'hw-gpu': l.hardware.gpu, 'hw-fonte': l.hardware.fonte, 'hw-mb': l.hardware.mb,
+    'diag-recl': l.diagnostico.reclamacao, 'diag-analise': l.diagnostico.analise,
+    'diag-servicos': l.diagnostico.servicos, 'diag-obs': l.diagnostico.obs,
+    'diag-tecnico': l.diagnostico.tecnico
+  };
+  Object.entries(fields).forEach(([id, val]) => { const el = document.getElementById(id); if (el) el.value = val || ''; });
+  document.getElementById('laudo-status').value = l.status || 'entrada';
+  document.getElementById('eq-tipo').value = l.equipamento.tipo || 'Notebook';
+  document.getElementById('eq-so').value = l.equipamento.so || 'Windows 11';
+  document.getElementById('diag-causa').value = l.diagnostico.causa || '';
+  document.getElementById('diag-urgencia').value = l.diagnostico.urgencia || 'normal';
+  checklistAtual = { ...l.checklist };
+  navigate('novo-laudo');
+  renderChecklist();
+}
+
+// ====================== ORÇAMENTO ======================
+function adicionarItem(desc='', qtd=1, unit=0) {
+  const id = ++itemCounter;
+  const container = document.getElementById('orc-items');
+  const div = document.createElement('div');
+  div.className = 'item-row';
+  div.id = 'item-' + id;
+  div.innerHTML = `
+    <input type="text" placeholder="Descrição do serviço ou peça" value="${desc.replace(/"/g,'&quot;')}" oninput="calcularTotal()" style="width:100%">
+    <div class="item-row-sub">
+      <div style="display:flex;flex-direction:column;gap:3px;flex:1">
+        <span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Qtd</span>
+        <input type="number" inputmode="decimal" min="1" value="${qtd}" oninput="calcularTotal()" style="text-align:center">
+      </div>
+      <div style="display:flex;flex-direction:column;gap:3px;flex:2">
+        <span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Unit (R$)</span>
+        <input type="number" inputmode="decimal" min="0" step="0.01" placeholder="0,00" value="${unit > 0 ? unit : ''}" oninput="calcularTotal()">
+      </div>
+      <div style="display:flex;flex-direction:column;gap:3px;flex:2;align-items:flex-end">
+        <span style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">Total</span>
+        <span class="item-total" id="total-${id}">R$ 0,00</span>
+      </div>
+      <button class="remove-btn" onclick="removerItem(${id})" title="Remover">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>`;
+  container.appendChild(div);
+  calcularTotal();
+}
+
+function removerItem(id) {
+  const el = document.getElementById('item-' + id);
+  if (el) el.remove();
+  calcularTotal();
+}
+
+function calcularTotal() {
+  let subtotal = 0;
+  document.querySelectorAll('#orc-items .item-row').forEach(row => {
+    const inputs = row.querySelectorAll('input[type=number]');
+    const qtd = parseFloat(inputs[0]?.value) || 0;
+    const unit = parseFloat(inputs[1]?.value) || 0;
+    const total = qtd * unit;
+    const id = row.id.replace('item-', '');
+    const el = document.getElementById('total-' + id);
+    if (el) el.textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
+    subtotal += total;
+  });
+  document.getElementById('orc-subtotal').textContent = 'R$ ' + subtotal.toFixed(2).replace('.', ',');
+  const desc = parseFloat(document.getElementById('orc-desconto').value) || 0;
+  const tipo = document.getElementById('orc-desc-tipo').value;
+  const descValor = tipo === 'pct' ? subtotal * (desc / 100) : desc;
+  const total = Math.max(0, subtotal - descValor);
+  document.getElementById('orc-total').textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
+}
+
+function selecionarPgto(btn) {
+  document.querySelectorAll('.pgto-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  document.getElementById('orc-pgto').value = btn.dataset.val;
+}
+
+function limparOrcamento() {
+  document.getElementById('orc-items').innerHTML = '';
+  ['orc-cliente','orc-obs'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  document.getElementById('orc-laudo').value = '';
+  document.getElementById('orc-data').value = hoje();
+  document.getElementById('orc-desconto').value = '0';
+  document.getElementById('orc-pgto').value = 'PIX';
+  document.querySelectorAll('.pgto-btn').forEach(b => b.classList.remove('selected'));
+  const def = document.querySelector('.pgto-btn[data-val="PIX"]');
+  if (def) def.classList.add('selected');
+  document.getElementById('orc-edit-id').value = '';
+  itemCounter = 0;
+  adicionarItem();
+  calcularTotal();
+}
+
+function salvarOrcamento() {
+  const cliente = v('orc-cliente').trim();
+  if (!cliente) { toast('Informe o nome do cliente!', 'error'); return; }
+  const items = [];
+  document.querySelectorAll('#orc-items .item-row').forEach(row => {
+    const descInput = row.querySelector('input[type=text]');
+    const numInputs = row.querySelectorAll('input[type=number]');
+    if (descInput && descInput.value.trim()) {
+      items.push({ desc: descInput.value, qtd: numInputs[0]?.value || 1, unit: numInputs[1]?.value || 0 });
+    }
+  });
+  const editId = v('orc-edit-id');
+  const orc = {
+    id: editId ? parseInt(editId) : Date.now(),
+    num: editId ? (orcamentos.find(o => o.id === parseInt(editId))?.num || gerarNumeroOrc()) : gerarNumeroOrc(),
+    cliente, laudoRef: v('orc-laudo'), data: v('orc-data'), validade: v('orc-validade'),
+    pgto: v('orc-pgto'), obs: v('orc-obs'), desconto: v('orc-desconto'), descTipo: v('orc-desc-tipo'),
+    items, total: document.getElementById('orc-total').textContent
+  };
+  if (editId) {
+    const idx = orcamentos.findIndex(o => o.id === parseInt(editId));
+    if (idx > -1) orcamentos[idx] = orc; else orcamentos.unshift(orc);
+    document.getElementById('orc-edit-id').value = '';
+    toast('✅ Orçamento atualizado!');
+  } else {
+    orcamentos.unshift(orc);
+    toast('✅ Orçamento salvo! Nº ' + orc.num);
+  }
+  localStorage.setItem('orcamentos', JSON.stringify(orcamentos));
+  renderDashboard();
+}
+
+function popularSelectLaudos() {
+  const sel = document.getElementById('orc-laudo');
+  const valorAtual = sel.value;
+  sel.innerHTML = '<option value="">— Selecionar Laudo —</option>';
+  laudos.forEach(l => {
+    const opt = document.createElement('option');
+    opt.value = l.num;
+    opt.textContent = `${l.num} — ${l.cliente.nome} (${l.equipamento.marca} ${l.equipamento.modelo || ''})`;
+    sel.appendChild(opt);
+  });
+  sel.value = valorAtual;
+}
+
+function preencherClienteDoLaudo() {
+  const num = v('orc-laudo');
+  if (!num) return;
+  const laudo = laudos.find(l => l.num === num);
+  if (!laudo) return;
+  document.getElementById('orc-cliente').value = laudo.cliente.nome;
+  toast(`✅ Cliente preenchido com dados do laudo ${num}`);
+}
+
+function editarOrcamento(id) {
+  const o = orcamentos.find(o => o.id === id);
+  if (!o) return;
+  navigate('orcamento');
+  popularSelectLaudos();
+  document.getElementById('orc-cliente').value = o.cliente || '';
+  document.getElementById('orc-laudo').value = o.laudoRef || '';
+  document.getElementById('orc-data').value = o.data || hoje();
+  document.getElementById('orc-validade').value = o.validade || '7 dias';
+  document.getElementById('orc-desconto').value = o.desconto || 0;
+  document.getElementById('orc-desc-tipo').value = o.descTipo || 'pct';
+  document.getElementById('orc-obs').value = o.obs || '';
+  document.getElementById('orc-pgto').value = o.pgto || 'PIX';
+  document.querySelectorAll('.pgto-btn').forEach(b => b.classList.toggle('selected', b.dataset.val === o.pgto));
+  document.getElementById('orc-items').innerHTML = '';
+  itemCounter = 0;
+  (o.items || []).forEach(i => adicionarItem(i.desc, i.qtd, i.unit));
+  if (!o.items || !o.items.length) adicionarItem();
+  document.getElementById('orc-edit-id').value = o.id;
+  calcularTotal();
+  toast('Orçamento carregado para edição.');
+}
+
+function gerarOrcamentoDoLaudo() {
+  salvarLaudo();
+  setTimeout(() => {
+    navigate('orcamento');
+    const nome = v('cli-nome') || '';
+    const numLaudo = laudos[0]?.num || '';
+    popularSelectLaudos();
+    document.getElementById('orc-cliente').value = nome;
+    document.getElementById('orc-data').value = hoje();
+    if (numLaudo) document.getElementById('orc-laudo').value = numLaudo;
+    toast('✅ Orçamento pré-preenchido!');
+  }, 200);
+}
+
+// ====================== AUTOCOMPLETE CLIENTE ======================
+let _autocompleteClientesCache = [];
+
+function autocompleteCliente(query) {
+  const list = document.getElementById('orc-cliente-list');
+  if (!list) return;
+  const q = (query || '').toLowerCase().trim();
+  const vistos = new Set();
+  _autocompleteClientesCache = [];
+  laudos.forEach(l => {
+    const nome = l.cliente.nome;
+    const key = nome.toLowerCase();
+    if (!vistos.has(key) && (!q || key.includes(q))) {
+      vistos.add(key);
+      _autocompleteClientesCache.push({ nome, tel: l.cliente.tel || '', email: l.cliente.email || '' });
+    }
+  });
+  if (!_autocompleteClientesCache.length) { list.classList.remove('open'); return; }
+  list.innerHTML = _autocompleteClientesCache.slice(0, 8).map((c, i) => `
+    <div class="autocomplete-item" ontouchend="selecionarClienteOrc(${i})" onmousedown="selecionarClienteOrc(${i})">
+      <div class="autocomplete-item-name">${c.nome}</div>
+      <div class="autocomplete-item-detail">${[c.tel, c.email].filter(Boolean).join(' · ') || 'Sem contato'}</div>
+    </div>`).join('');
+  list.classList.add('open');
+}
+
+function selecionarClienteOrc(idx) {
+  const c = _autocompleteClientesCache[idx];
+  if (!c) return;
+  document.getElementById('orc-cliente').value = c.nome;
+  document.getElementById('orc-cliente-list').classList.remove('open');
+  toast(`✅ Cliente "${c.nome}" selecionado.`);
+}
+
+document.addEventListener('click', function(e) {
+  const list = document.getElementById('orc-cliente-list');
+  const input = document.getElementById('orc-cliente');
+  if (list && input && !list.contains(e.target) && e.target !== input) list.classList.remove('open');
+});
+
+// ====================== CATÁLOGO EQUIPAMENTOS ======================
+function buscarModelo(query) {
+  const sugestoesEl = document.getElementById('eq-sugestoes');
+  if (!query || query.length < 2) { sugestoesEl.style.display = 'none'; return; }
+  const q = query.toLowerCase();
+  const todos = getEquipCatalogo();
+  const resultados = todos.filter(e =>
+    e.marca.toLowerCase().includes(q) || e.modelo.toLowerCase().includes(q) ||
+    (e.marca + ' ' + e.modelo).toLowerCase().includes(q)
+  ).slice(0, 10);
+  if (!resultados.length) {
+    sugestoesEl.innerHTML = `<div style="padding:14px 16px;font-size:13px;color:var(--text3);text-align:center">Nenhum modelo encontrado. Preencha manualmente ou <button onclick="abrirModalNovoEquip()" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;text-decoration:underline">cadastre um novo</button>.</div>`;
+    sugestoesEl.style.display = 'block'; return;
+  }
+  sugestoesEl.innerHTML = resultados.map((e, i) => `
+    <div class="eq-sugestao-item" onclick="selecionarModelo(${todos.indexOf(e)})">
+      <div class="eq-sugestao-icon">${EQUIP_ICONS[e.tipo] || '💡'}</div>
+      <div class="eq-sugestao-info">
+        <div class="eq-sugestao-nome">${e.marca} ${e.modelo}</div>
+        <div class="eq-sugestao-specs">${[e.cpu, e.ram, e.hd].filter(Boolean).join(' · ')}</div>
+      </div>
+      <div class="eq-sugestao-badge">${e.tipo}</div>
+    </div>`).join('');
+  sugestoesEl.style.display = 'block';
+}
+
+function selecionarModelo(idx) {
+  const todos = getEquipCatalogo();
+  const e = todos[idx];
+  if (!e) return;
+  document.getElementById('eq-tipo').value = e.tipo;
+  document.getElementById('eq-marca').value = e.marca;
+  document.getElementById('eq-modelo').value = e.modelo;
+  document.getElementById('eq-so').value = e.so || 'Windows 11';
+  document.getElementById('hw-cpu').value = e.cpu || '';
+  document.getElementById('hw-ram').value = e.ram || '';
+  document.getElementById('hw-hd').value = e.hd || '';
+  document.getElementById('hw-gpu').value = e.gpu || '';
+  document.getElementById('hw-fonte').value = e.fonte || '';
+  document.getElementById('hw-mb').value = e.mb || '';
+  document.getElementById('eq-modelo-nome-sel').textContent = e.marca + ' ' + e.modelo;
+  document.getElementById('eq-modelo-selecionado').style.display = 'block';
+  document.getElementById('eq-sugestoes').style.display = 'none';
+  document.getElementById('eq-busca-modelo').value = e.marca + ' ' + e.modelo;
+  toast(`✅ Specs do ${e.marca} ${e.modelo} carregadas!`);
+}
+
+function limparModeloSelecionado() {
+  document.getElementById('eq-modelo-selecionado').style.display = 'none';
+  document.getElementById('eq-busca-modelo').value = '';
+  document.getElementById('eq-sugestoes').style.display = 'none';
+}
+
+document.addEventListener('click', function(e) {
+  const sugestoesEl = document.getElementById('eq-sugestoes');
+  const buscaEl = document.getElementById('eq-busca-modelo');
+  if (sugestoesEl && buscaEl && !sugestoesEl.contains(e.target) && e.target !== buscaEl) sugestoesEl.style.display = 'none';
+});
+
+function abrirModalNovoEquip(idx) {
+  const modal = document.getElementById('modal-equip');
+  if (idx !== undefined) {
+    const custom = JSON.parse(localStorage.getItem('equipCatalogo') || '[]');
+    const e = custom[idx];
+    if (!e) return;
+    document.getElementById('modal-equip-titulo').textContent = '✏️ Editar Equipamento';
+    document.getElementById('modal-equip-idx').value = idx;
+    document.getElementById('meq-tipo').value = e.tipo;
+    document.getElementById('meq-marca').value = e.marca;
+    document.getElementById('meq-modelo').value = e.modelo;
+    document.getElementById('meq-so').value = e.so || 'Windows 11';
+    document.getElementById('meq-cpu').value = e.cpu || '';
+    document.getElementById('meq-ram').value = e.ram || '';
+    document.getElementById('meq-hd').value = e.hd || '';
+    document.getElementById('meq-gpu').value = e.gpu || '';
+    document.getElementById('meq-fonte').value = e.fonte || '';
+    document.getElementById('meq-mb').value = e.mb || '';
+  } else {
+    document.getElementById('modal-equip-titulo').textContent = '➕ Novo Equipamento no Catálogo';
+    document.getElementById('modal-equip-idx').value = '';
+    ['meq-marca','meq-modelo','meq-cpu','meq-ram','meq-hd','meq-gpu','meq-fonte','meq-mb'].forEach(id => { document.getElementById(id).value = ''; });
+    document.getElementById('meq-tipo').value = 'Notebook';
+    document.getElementById('meq-so').value = 'Windows 11';
+  }
+  modal.classList.add('open');
+}
+
+function fecharModalEquip() { document.getElementById('modal-equip').classList.remove('open'); }
+
+function salvarEquipCatalogo() {
+  const marca = document.getElementById('meq-marca').value.trim();
+  const modelo = document.getElementById('meq-modelo').value.trim();
+  if (!marca || !modelo) { toast('Informe marca e modelo!', 'error'); return; }
+  const custom = JSON.parse(localStorage.getItem('equipCatalogo') || '[]');
+  const e = {
+    tipo: document.getElementById('meq-tipo').value, marca, modelo,
+    so: document.getElementById('meq-so').value, cpu: document.getElementById('meq-cpu').value,
+    ram: document.getElementById('meq-ram').value, hd: document.getElementById('meq-hd').value,
+    gpu: document.getElementById('meq-gpu').value, fonte: document.getElementById('meq-fonte').value,
+    mb: document.getElementById('meq-mb').value,
+  };
+  const idxStr = document.getElementById('modal-equip-idx').value;
+  if (idxStr !== '') custom[parseInt(idxStr)] = e; else custom.push(e);
+  localStorage.setItem('equipCatalogo', JSON.stringify(custom));
+  fecharModalEquip(); renderCfgEquip(); toast('✅ Equipamento salvo no catálogo!');
+}
+
+function deletarEquipCatalogo(idx) {
+  if (!confirm('Remover este equipamento do catálogo?')) return;
+  const custom = JSON.parse(localStorage.getItem('equipCatalogo') || '[]');
+  custom.splice(idx, 1);
+  localStorage.setItem('equipCatalogo', JSON.stringify(custom));
+  renderCfgEquip(); toast('Equipamento removido.');
+}
+
+function renderCfgEquip() {
+  const container = document.getElementById('cfg-equip-list');
+  if (!container) return;
+  const custom = JSON.parse(localStorage.getItem('equipCatalogo') || '[]');
+  let html = `<div style="font-size:11px;color:var(--text3);font-family:var(--mono);letter-spacing:1px;padding:4px 0;margin-bottom:4px">${equipamentosBase.length} modelos pré-cadastrados (somente leitura)</div>`;
+  if (custom.length === 0) {
+    html += `<div style="font-size:13px;color:var(--text3);padding:10px 0">Nenhum equipamento personalizado ainda.</div>`;
+  } else {
+    html += `<div style="font-size:11px;color:var(--accent3);font-family:var(--mono);letter-spacing:1px;padding:8px 0 4px">${custom.length} equipamento(s) personalizado(s)</div>`;
+    custom.forEach((e, i) => {
+      html += `<div style="display:flex;align-items:center;gap:12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px">
+        <span style="font-size:18px">${EQUIP_ICONS[e.tipo]||'💡'}</span>
+        <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--text)">${e.marca} ${e.modelo}</div><div style="font-size:11px;color:var(--text3);margin-top:2px">${e.tipo} · ${e.cpu||''}</div></div>
+        <button class="btn btn-ghost btn-sm" onclick="abrirModalNovoEquip(${i})">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deletarEquipCatalogo(${i})">🗑️</button>
+      </div>`;
+    });
+  }
+  container.innerHTML = html;
+}
+
+// ====================== CATÁLOGO DE SERVIÇOS ======================
+function toggleCatalogo() {
+  catalogoAberto = !catalogoAberto;
+  const panel = document.getElementById('catalogo-panel');
+  if (catalogoAberto) {
+    panel.classList.add('open');
+    renderCatalogo('');
+    if (window.innerWidth > 600) setTimeout(() => document.getElementById('catalogo-busca').focus(), 50);
+  } else {
+    panel.classList.remove('open');
+  }
+}
+
+document.addEventListener('click', function(e) {
+  const panel = document.getElementById('catalogo-panel');
+  const btn = document.getElementById('btn-catalogo');
+  if (panel && panel.classList.contains('open') && !panel.contains(e.target) && btn && !btn.contains(e.target)) {
+    panel.classList.remove('open');
+    catalogoAberto = false;
+  }
+});
+
+function filtrarCatalogo() { renderCatalogo(v('catalogo-busca').toLowerCase()); }
+
+function renderCatalogo(busca) {
+  const list = document.getElementById('catalogo-list');
+  const precos = getPrecosCatalogo();
+  let html = '';
+  catalogoServicos.forEach(cat => {
+    const filtrados = cat.itens.filter(i => i.nome.toLowerCase().includes(busca));
+    if (!filtrados.length) return;
+    html += `<div class="catalogo-category">${cat.categoria}</div>`;
+    filtrados.forEach(item => {
+      const preco = precos[item.nome] ?? 0;
+      const precoLabel = preco > 0 ? `R$ ${parseFloat(preco).toFixed(2).replace('.',',')}` : `<span style="color:var(--warn);font-size:11px">⚠ Sem valor</span>`;
+      html += `<div class="catalogo-item"><div class="catalogo-item-info"><div class="catalogo-item-name">${item.nome}</div><div class="catalogo-item-price">${precoLabel}</div></div><button class="catalogo-item-add" onclick="adicionarDosCatalogo('${item.nome.replace(/'/g,"\\'")}',${preco})">+ Add</button></div>`;
+    });
+  });
+  if (!html) html = `<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px">Nenhum serviço encontrado.</div>`;
+  list.innerHTML = html;
+}
+
+function adicionarDosCatalogo(nome, preco) {
+  adicionarItem(nome, 1, preco);
+  toast(`✅ "${nome}" adicionado ao orçamento.`);
+  // Fechar catálogo após adicionar
+  document.getElementById('catalogo-panel').classList.remove('open');
+  catalogoAberto = false;
+}
+
+// ====================== CONFIGURAÇÕES ======================
+function carregarConfigs() {
+  const cfg = getConfigs();
+  ['empresa','cnpj','tel','email','end','tecnico','rodape'].forEach(k => {
+    const el = document.getElementById('cfg-' + k);
+    if (el) el.value = cfg[k] || '';
+  });
+  document.getElementById('cfg-garantia').value = cfg.garantia || '90';
+  renderCfgCatalogo();
+  renderCfgEquip();
+}
+
+function renderCfgCatalogo() {
+  const container = document.getElementById('cfg-catalogo-precos');
+  const precos = getPrecosCatalogo();
+  container.innerHTML = '';
+  catalogoServicos.forEach(cat => {
+    const catLabel = document.createElement('div');
+    catLabel.style.cssText = 'font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);font-family:var(--mono);padding:10px 0 4px';
+    catLabel.textContent = cat.categoria;
+    container.appendChild(catLabel);
+    cat.itens.forEach(item => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;min-height:52px';
+      row.innerHTML = `<span style="font-size:13px;color:var(--text);flex:1">${item.nome}</span>
+        <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;width:120px">
+          <span style="font-size:12px;color:var(--text3)">R$</span>
+          <input type="number" inputmode="decimal" min="0" step="0.01" placeholder="0,00" value="${precos[item.nome] > 0 ? precos[item.nome] : ''}" data-servico="${item.nome}" style="flex:1;text-align:right;padding:8px;font-size:14px;font-family:var(--mono)">
+        </div>`;
+      container.appendChild(row);
+    });
+  });
+}
+
+function salvarPrecosCatalogo() {
+  const precos = {};
+  document.querySelectorAll('#cfg-catalogo-precos input[data-servico]').forEach(input => {
+    const val = parseFloat(input.value);
+    if (!isNaN(val) && val >= 0) precos[input.dataset.servico] = val;
+  });
+  localStorage.setItem('precosCatalogo', JSON.stringify(precos));
+  toast('✅ Preços do catálogo salvos!');
+}
+
+function salvarConfigs() {
+  const cfg = {};
+  ['empresa','cnpj','tel','email','end','tecnico','garantia','rodape'].forEach(k => {
+    const el = document.getElementById('cfg-' + k);
+    if (el) cfg[k] = el.value;
+  });
+  localStorage.setItem('configs', JSON.stringify(cfg));
+  toast('✅ Configurações salvas!');
+}
+
+function renderCfgChecklist() {
+  const container = document.getElementById('cfg-checklist-items');
+  container.innerHTML = '';
+  checklistPadrao.forEach((item, i) => {
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex;gap:8px;align-items:center';
+    div.innerHTML = `<input type="text" value="${item}" id="cfg-chk-${i}" style="flex:1">
+      <button class="remove-btn" onclick="this.parentElement.remove()" title="Remover" style="min-height:44px;min-width:44px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>`;
+    container.appendChild(div);
+  });
+}
+
+function adicionarChecklistItem() {
+  const container = document.getElementById('cfg-checklist-items');
+  const idx = container.children.length;
+  const div = document.createElement('div');
+  div.style.cssText = 'display:flex;gap:8px;align-items:center';
+  div.innerHTML = `<input type="text" placeholder="Novo item de checklist" id="cfg-chk-${idx}" style="flex:1">
+    <button class="remove-btn" onclick="this.parentElement.remove()" title="Remover" style="min-height:44px;min-width:44px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>`;
+  container.appendChild(div);
+  div.querySelector('input').focus();
+}
+
+function salvarChecklist() {
+  const items = [];
+  document.querySelectorAll('#cfg-checklist-items input[type=text]').forEach(i => {
+    if (i.value.trim()) items.push(i.value.trim());
+  });
+  checklistPadrao = items;
+  localStorage.setItem('checklistPadrao', JSON.stringify(checklistPadrao));
+  toast('✅ Checklist atualizado!');
+}
+
+// ====================== IMPRIMIR ======================
+function imprimirOrcamento() {
+  const cfg = getConfigs();
+  const items = [];
+  let subtotal = 0;
+  document.querySelectorAll('#orc-items .item-row').forEach(row => {
+    const descInput = row.querySelector('input[type=text]');
+    const numInputs = row.querySelectorAll('input[type=number]');
+    const qtd = parseFloat(numInputs[0]?.value) || 0;
+    const unit = parseFloat(numInputs[1]?.value) || 0;
+    const total = qtd * unit;
+    subtotal += total;
+    if (descInput && descInput.value.trim()) items.push({ desc: descInput.value, qtd, unit, total });
+  });
+  const totalFinal = document.getElementById('orc-total').textContent;
+  const desc = parseFloat(v('orc-desconto')) || 0;
+  const tipo = v('orc-desc-tipo');
+  const descValor = tipo === 'pct' ? subtotal * (desc / 100) : desc;
+  const obs = v('orc-obs');
+  const garantia = cfg.garantia || '90';
+  const html = `
+    <div class="print-header">
+      <div>
+        <div class="print-logo">${cfg.empresa || 'Assistência Técnica'}</div>
+        <div style="font-size:12px;margin-top:4px">${cfg.cnpj || ''}</div>
+        <div style="font-size:12px">${cfg.tel || ''}${cfg.email ? ' | ' + cfg.email : ''}</div>
+        <div style="font-size:12px">${cfg.end || ''}</div>
+      </div>
+      <div class="print-meta">
+        <strong style="font-size:16px">ORÇAMENTO DE SERVIÇOS</strong><br>
+        Nº ${gerarNumeroOrc()}<br>
+        Data: ${formatarData(v('orc-data'))}<br>
+        Validade: ${v('orc-validade')}<br>
+        ${v('orc-laudo') ? 'Laudo: ' + v('orc-laudo') : ''}
+      </div>
+    </div>
+    <div class="print-section"><h3>Cliente</h3><div><strong>Nome:</strong> ${v('orc-cliente')}</div></div>
+    <div class="print-section">
+      <h3>Itens do Orçamento</h3>
+      <table class="print-table">
+        <tr><th>Descrição</th><th style="width:60px;text-align:center">Qtd</th><th style="width:100px;text-align:right">Unit (R$)</th><th style="width:100px;text-align:right">Total (R$)</th></tr>
+        ${items.map(i => `<tr><td>${i.desc}</td><td style="text-align:center">${i.qtd}</td><td style="text-align:right">${i.unit.toFixed(2).replace('.',',')}</td><td style="text-align:right">${i.total.toFixed(2).replace('.',',')}</td></tr>`).join('')}
+      </table>
+      <div class="print-total">
+        Subtotal: R$ ${subtotal.toFixed(2).replace('.',',')}
+        ${descValor > 0 ? `<br><span style="color:#c00;font-size:13px">Desconto: − R$ ${descValor.toFixed(2).replace('.',',')}</span>` : ''}
+        <br><span style="font-size:19px;border-top:2px solid #333;padding-top:6px;display:inline-block;margin-top:4px">TOTAL: ${totalFinal}</span>
+      </div>
+    </div>
+    <div class="print-section">
+      <h3>Condições</h3>
+      <div><strong>Forma de Pagamento:</strong> ${v('orc-pgto')}</div>
+      <div style="margin-top:6px"><strong>Garantia dos serviços:</strong> ${garantia} dias após a entrega</div>
+      ${obs ? `<div style="margin-top:8px;background:#f5f5f5;padding:10px;border-radius:4px;font-size:12px;white-space:pre-line">${obs}</div>` : ''}
+      ${cfg.rodape ? `<div style="margin-top:12px;font-size:11px;color:#666;border-top:1px solid #ccc;padding-top:8px">${cfg.rodape}</div>` : ''}
+    </div>
+    <div class="print-sign">
+      <div>${cfg.empresa || 'Assistência Técnica'}<br>Assinatura / Carimbo</div>
+      <div>Cliente: ${v('orc-cliente')}<br>Assinatura e data</div>
+    </div>`;
+  document.getElementById('print-area').innerHTML = html;
+  window.print();
+}
+
+function imprimirLaudoAtivo() {
+  if (!laudoAtivo) return;
+  const l = laudoAtivo;
+  const cfg = getConfigs();
+  const statusMap = { entrada:'ENTRADA', diagnostico:'EM DIAGNÓSTICO', aguardando:'AGUARD. APROVAÇÃO', em_reparo:'EM REPARO', concluido:'CONCLUÍDO', entregue:'ENTREGUE', cancelado:'CANCELADO' };
+  const html = `
+    <div class="print-header">
+      <div>
+        <div class="print-logo">${cfg.empresa || 'Assistência Técnica'}</div>
+        <div style="font-size:12px;margin-top:4px">${cfg.cnpj || ''}</div>
+        <div style="font-size:12px">${cfg.tel || ''}${cfg.email ? ' | ' + cfg.email : ''}</div>
+        <div style="font-size:12px">${cfg.end || ''}</div>
+      </div>
+      <div class="print-meta">
+        <strong>LAUDO TÉCNICO</strong><br>Nº ${l.num}<br>Data: ${formatarData(l.data)}<br>
+        Status: ${statusMap[l.status] || l.status}
+      </div>
+    </div>
+    <div class="print-section"><h3>Dados do Cliente</h3>
+      <div class="print-grid">
+        <div><span>Nome:</span> ${l.cliente.nome}</div><div><span>CPF/CNPJ:</span> ${l.cliente.doc || '—'}</div>
+        <div><span>Telefone:</span> ${l.cliente.tel || '—'}</div><div><span>E-mail:</span> ${l.cliente.email || '—'}</div>
+        <div style="grid-column:1/-1"><span>Endereço:</span> ${l.cliente.end || '—'}</div>
+      </div>
+    </div>
+    <div class="print-section"><h3>Equipamento</h3>
+      <div class="print-grid">
+        <div><span>Tipo:</span> ${l.equipamento.tipo}</div><div><span>Marca:</span> ${l.equipamento.marca}</div>
+        <div><span>Modelo:</span> ${l.equipamento.modelo || '—'}</div><div><span>Série:</span> ${l.equipamento.serie || '—'}</div>
+        <div><span>SO:</span> ${l.equipamento.so}</div><div><span>Patrimônio:</span> ${l.equipamento.pat || '—'}</div>
+      </div>
+    </div>
+    <div class="print-section"><h3>Hardware</h3>
+      <div class="print-grid">
+        <div><span>CPU:</span> ${l.hardware.cpu || '—'}</div><div><span>RAM:</span> ${l.hardware.ram || '—'}</div>
+        <div><span>Armazenamento:</span> ${l.hardware.hd || '—'}</div><div><span>GPU:</span> ${l.hardware.gpu || '—'}</div>
+        <div><span>Fonte:</span> ${l.hardware.fonte || '—'}</div><div><span>Placa-Mãe:</span> ${l.hardware.mb || '—'}</div>
+      </div>
+    </div>
+    <div class="print-section"><h3>Diagnóstico</h3>
+      <p style="background:#f9f9f9;padding:8px;border-radius:4px;font-size:12px"><strong>Reclamação:</strong> ${l.diagnostico.reclamacao || '—'}</p>
+      <p style="background:#f9f9f9;padding:8px;border-radius:4px;font-size:12px;margin-top:6px"><strong>Análise Técnica:</strong> ${l.diagnostico.analise || '—'}</p>
+      ${l.diagnostico.servicos ? `<p style="background:#f9f9f9;padding:8px;border-radius:4px;font-size:12px;margin-top:6px"><strong>Serviços:</strong> ${l.diagnostico.servicos}</p>` : ''}
+      ${l.diagnostico.obs ? `<p style="background:#f9f9f9;padding:8px;border-radius:4px;font-size:12px;margin-top:6px"><strong>Observações:</strong> ${l.diagnostico.obs}</p>` : ''}
+      <div class="print-grid" style="margin-top:8px">
+        <div><span>Causa:</span> ${l.diagnostico.causa || '—'}</div>
+        <div><span>Técnico:</span> ${l.diagnostico.tecnico || cfg.tecnico || '—'}</div>
+        <div><span>Previsão:</span> ${l.entrega ? formatarData(l.entrega) : '—'}</div>
+      </div>
+    </div>
+    <div class="print-section"><h3>Checklist de Vistoria</h3>
+      <div class="print-checklist">
+        ${checklistPadrao.map((item, i) => {
+          const st = l.checklist && l.checklist[i + '_status'] || (l.checklist && l.checklist[i] ? 'ok' : 'na');
+          const icon = st === 'ok' ? '✅' : st === 'defeito' ? '❌' : '—';
+          return `<div class="print-checklist-item"><span>${icon}</span> ${item}</div>`;
+        }).join('')}
+      </div>
+    </div>
+    ${cfg.rodape ? `<div style="font-size:11px;color:#666;margin-top:16px;padding-top:12px;border-top:1px solid #ddd">${cfg.rodape}</div>` : ''}
+    <div class="print-sign">
+      <div>${cfg.empresa || 'Assistência Técnica'}<br>${l.diagnostico.tecnico || cfg.tecnico || 'Técnico Responsável'}</div>
+      <div>${l.cliente.nome}<br>Assinatura do Cliente</div>
+    </div>`;
+  document.getElementById('print-area').innerHTML = html;
+  window.print();
+}
+
+// ====================== BACKUP ======================
+function exportarDados() {
+  const data = {
+    laudos, orcamentos,
+    configs: JSON.parse(localStorage.getItem('configs') || '{}'),
+    checklistPadrao,
+    precosCatalogo: getPrecosCatalogo(),
+    equipCatalogo: JSON.parse(localStorage.getItem('equipCatalogo') || '[]'),
+    exportadoEm: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `techlaudo-backup-${hoje()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('✅ Dados exportados!');
+}
+
+function importarDados(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.laudos) { laudos = data.laudos; localStorage.setItem('laudos', JSON.stringify(laudos)); }
+      if (data.orcamentos) { orcamentos = data.orcamentos; localStorage.setItem('orcamentos', JSON.stringify(orcamentos)); }
+      if (data.configs) localStorage.setItem('configs', JSON.stringify(data.configs));
+      if (data.checklistPadrao) { checklistPadrao = data.checklistPadrao; localStorage.setItem('checklistPadrao', JSON.stringify(checklistPadrao)); }
+      if (data.precosCatalogo) localStorage.setItem('precosCatalogo', JSON.stringify(data.precosCatalogo));
+      if (data.equipCatalogo) localStorage.setItem('equipCatalogo', JSON.stringify(data.equipCatalogo));
+      renderDashboard(); toast('✅ Dados importados com sucesso!');
+    } catch(err) { toast('Erro ao importar: arquivo inválido.', 'error'); }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+// ====================== INIT ======================
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('laudo-data').value = hoje();
+  document.getElementById('orc-data').value = hoje();
+  renderChecklist();
+  renderDashboard();
+
+  // Selecionar PIX por padrão
+  const pixBtn = document.querySelector('.pgto-btn[data-val="PIX"]');
+  if (pixBtn) pixBtn.classList.add('selected');
+
+  // Carregar técnico padrão
+  const cfg = getConfigs();
+  if (cfg.tecnico) document.getElementById('diag-tecnico').value = cfg.tecnico;
+
+  // Fechar modais ao clicar fora
+  document.getElementById('modal-detalhes').addEventListener('click', function(e) { if (e.target === this) fecharModal(); });
+  document.getElementById('modal-equip').addEventListener('click', function(e) { if (e.target === this) fecharModalEquip(); });
+
+  // Prevent body scroll on modal touch
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('touchmove', (e) => { if (e.target === overlay) e.preventDefault(); }, { passive: false });
+  });
+});
+</script>
+</body>
+</html>
